@@ -1,0 +1,5 @@
+# default value of all manifest.yml
+name: example
+description: this is an example jina executor image
+author: Jina AI Dev-Team (dev-team@jina.ai)
+keywords:
