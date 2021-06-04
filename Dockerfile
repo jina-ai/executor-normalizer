@@ -1,7 +1,7 @@
 ARG JINA_VERSION
-ARG BUILD_DATE
+FROM jinaai/jina:latest
 
-FROM jinaai/jina:$JINA_VERSION
+ARG JINA_VERSION
 
 # setup the workspace
 COPY . /workspace
