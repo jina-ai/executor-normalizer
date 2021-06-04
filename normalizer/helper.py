@@ -7,10 +7,7 @@ from . import __resources_path__
 
 
 def load_manifest(yaml_path: 'pathlib.Path') -> Dict:
-    """Load manifest of executor from YAML file.
-    
-    
-    """
+    """Load manifest of executor from YAML file."""
     with open(__resources_path__ / 'manifest.yml') as fp:
         tmp = JAML.load(
             fp

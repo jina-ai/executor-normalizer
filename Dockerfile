@@ -1,15 +1,14 @@
-ARG PY_VERSION=3.8
+ARG JINA_VERSION
+ARG BUILD_DATE
 
-FROM python:${PY_VERSION}-slim
+FROM jinaai/jina:$JINA_VERSION
 
-RUN apt-get update && apt-get install --no-install-recommends -y gcc libc6-dev
-
-RUN pip install --pre jina
-
-COPY requirements.txt requirements.txt
-
-RUN pip install -r requirements.txt
-
+# setup the workspace
+COPY . /workspace
 WORKDIR /workspace
 
-CMD [ "/bin/bash" ]
+# install the third-party requirements
+RUN pip install -r requirements.txt
+
+# for testing the image
+RUN pip install pytest && pytest

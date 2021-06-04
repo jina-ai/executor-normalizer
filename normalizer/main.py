@@ -2,6 +2,7 @@ import os
 import pathlib
 
 import click
+from jina import __version__ as __iina_version__
 from jina.helper import colored, get_readable_size
 
 from . import __version__
@@ -11,7 +12,9 @@ from .helper import load_manifest
 @click.command()
 @click.argument('path', default='.')
 @click.option('--verbose', '-v', is_flag=True, help='Enables verbose mode.')
-@click.version_option(__version__)
+@click.version_option(
+    f'{__version__} (Jina=v{__iina_version__})', prog_name='executor-normarlizer'
+)
 def cli(path, verbose):
     """Jina Executor Normalizer."""
 
