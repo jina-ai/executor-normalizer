@@ -1,6 +1,5 @@
 import os
 
-import numpy as np
 import pytest
 
 from normalizer.docker import ExecutorDockerfile
@@ -26,3 +25,18 @@ def test_baseimage(exe_dockerfile):
     exe_dockerfile.baseimage = 'jinaai/jina:latest'
     assert exe_dockerfile.baseimage == 'jinaai/jina:latest'
     assert exe_dockerfile.lines[1] == 'FROM jinaai/jina:latest\n'
+
+
+def test_dumps(exe_dockerfile):
+    import tempfile
+
+    temp_file = tempfile.NamedTemporaryFile(delete=False)
+
+    exe_dockerfile.dumps(temp_file.name)
+
+    with open(temp_file.name, 'r') as fp:
+        lines = fp.readlines()
+
+        assert lines == exe_dockerfile.lines
+
+    os.unlink(temp_file.name)

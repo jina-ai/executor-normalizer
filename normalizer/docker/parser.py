@@ -1,3 +1,4 @@
+import io
 from posixpath import basename
 from textwrap import dedent
 from typing import Dict, List
@@ -7,7 +8,10 @@ from dockerfile_parse import DockerfileParser
 
 class ExecutorDockerfile:
     def __init__(self, build_args: Dict = {'JINA_VERSION': 'master'}):
-        self._parser = DockerfileParser(env_replace=True, build_args=build_args)
+        self._buffer = io.BytesIO()
+        self._parser = DockerfileParser(
+            fileobj=self._buffer, env_replace=True, build_args=build_args
+        )
 
         dockerfile_template = dedent(
             """\
@@ -67,6 +71,10 @@ class ExecutorDockerfile:
         else:
             self._parser.content += entrypoint_line
 
-    def dumps(self, dockerfile: str):
+    def dumps(self):
+        return self._buffer.getvalue().decode()
+
+    def dump(self, dockerfile: str):
         with open(dockerfile, 'wb') as fp:
-            fp.write(self.content.encode('utf-8'))
+            fp.write(self._buffer.getvalue())
+            fp.write(b'\n')
