@@ -92,6 +92,9 @@ def cli(path, jina_version, verbose):
             + '\n'
         )
 
+    if not requirements_path.exists():
+        requirements_path.touch()
+
     manifest = load_manifest(manifest_path)
 
     if not dockerfile_path.exists():
@@ -101,7 +104,7 @@ def cli(path, jina_version, verbose):
             dockerfile.add_unitest()
 
         if config_path.exists():
-            dockerfile.entrypoint = ['jina', 'pod', '--uses', f'{config_path}']
+            dockerfile.entrypoint = ['jina', 'pod', '--uses', f'{config_path.relative_to(work_path)}']
         else:
             executors = inspect_executors(py_glob)
 
