@@ -104,14 +104,14 @@ def cli(path, jina_version, verbose):
             dockerfile.entrypoint = ['jina', 'pod', '--uses', f'{config_path}']
         else:
             executors = inspect_executors(py_glob)
-            dockerfile.entrypoint = [
-                'jina',
-                'pod',
-                '--uses',
-                f'{executors[0]}',
-                '--py-modules',
-                ','.join([str(p.relative_to(work_path)) for p in py_glob]),
-            ]
+
+            entrypoint_args = ['jina', 'pod', '--uses', f'{executors[0]}']
+            for p in py_glob:
+                entrypoint_args.append('--py-modules')
+                entrypoint_args.append(f'{p.relative_to(work_path)}')
+
+            dockerfile.entrypoint = entrypoint_args
+
         print(dockerfile.dumps())
         dockerfile.dump(dockerfile_path)
 
