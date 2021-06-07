@@ -18,11 +18,12 @@ def inspect_executors(py_modules: List[str]):
     import ast
 
     classes = []
-    for filename in py_modules:
-        with open(filename, mode='rt') as fin:
-            tree = ast.parse(fin.read(), filename=filename)
+    for filepath in py_modules:
+        # with open(filename, mode='rt') as fin:
+        with filepath.open() as fin:
+            tree = ast.parse(fin.read(), filename=str(filepath))
             # print(tree)
-            print(filename)
+            print(filepath)
             # for o in tree.body:
             #     print(o)
             classes.extend(_inspect_class_defs(tree))
@@ -55,15 +56,21 @@ def cli(path, jina_version, verbose):
 
     work_path = pathlib.Path(path)
 
+    if verbose:
+        print(f'=> The executor repository is located at: {work_path}')
+
     dockerfile_path = work_path / 'Dockerfile'
     manifest_path = work_path / 'manifest.yml'
     config_path = work_path / 'config.yml'
     readme_path = work_path / 'README.md'
     requirements_path = work_path / 'requirements.txt'
 
-    py_glob = [_.as_posix() for _ in work_path.glob('*.py')]
+    # py_glob = [_.as_posix() for _ in work_path.glob('*.py')]
 
-    test_glob = [_.as_posix() for _ in work_path.glob('tests/test_*.py')]
+    # test_glob = [_.as_posix() for _ in work_path.glob('tests/test_*.py')]
+
+    py_glob = list(work_path.glob('*.py'))
+    test_glob = list(work_path.glob('tests/test_*.py'))
 
     completeness = {
         'Dockerfile': dockerfile_path,
@@ -99,7 +106,7 @@ def cli(path, jina_version, verbose):
                 '--uses',
                 f'{executors[0]}',
                 '--py-modules',
-                ','.join(py_glob),
+                ','.join([str(p.relative_to(work_path)) for p in py_glob]),
             ]
         print(dockerfile.dumps())
         dockerfile.dump(dockerfile_path)
