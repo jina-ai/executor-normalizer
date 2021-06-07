@@ -27,17 +27,26 @@ class ExecutorDockerfile:
             # install the third-party requirements
             RUN pip install -r requirements.txt
 
-            # for testing the image
-            RUN pip install pytest && pytest
             """
         )
 
-        self._parser.content = dockerfile_template.format()
+        self._parser.content = dockerfile_template
+
+        self._has_unittests = False
 
         self._entrypoint = None
 
     def __str__(self):
         return self.content
+
+    def add_unitest(self):
+        self._parser.content += dedent(
+            """\
+            # for testing the image
+            RUN pip install pytest && pytest
+
+            """
+        )
 
     @property
     def content(self):

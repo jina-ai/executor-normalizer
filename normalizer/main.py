@@ -96,6 +96,10 @@ def cli(path, jina_version, verbose):
 
     if not dockerfile_path.exists():
         dockerfile = ExecutorDockerfile(build_args={'JINA_VERSION': jina_version})
+
+        if len(test_glob) > 0:
+            dockerfile.add_unitest()
+
         if config_path.exists():
             dockerfile.entrypoint = ['jina', 'pod', '--uses', f'{config_path}']
         else:
