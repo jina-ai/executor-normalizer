@@ -23,7 +23,7 @@ def inspect_executors(py_modules: List[str]):
         with filepath.open() as fin:
             tree = ast.parse(fin.read(), filename=str(filepath))
             # print(tree)
-            print(filepath)
+            # print(filepath)
             # for o in tree.body:
             #     print(o)
             classes.extend(_inspect_class_defs(tree))
@@ -44,16 +44,7 @@ def inspect_executors(py_modules: List[str]):
     return executors
 
 
-@click.command()
-@click.argument('path', default='.')
-@click.option('--jina-version', default='master', help='Specify the jina version.')
-@click.option('--verbose', '-v', is_flag=True, help='Enables verbose mode.')
-@click.version_option(
-    f'{__version__} (Jina=v{__iina_version__})', prog_name='executor-normarlizer'
-)
-def cli(path, jina_version, verbose):
-    """Jina Executor Normalizer."""
-
+def normalize(path, jina_version: str = 'master', verbose: bool = False):
     work_path = pathlib.Path(path)
 
     if verbose:
@@ -104,7 +95,12 @@ def cli(path, jina_version, verbose):
             dockerfile.add_unitest()
 
         if config_path.exists():
-            dockerfile.entrypoint = ['jina', 'pod', '--uses', f'{config_path.relative_to(work_path)}']
+            dockerfile.entrypoint = [
+                'jina',
+                'pod',
+                '--uses',
+                f'{config_path.relative_to(work_path)}',
+            ]
         else:
             executors = inspect_executors(py_glob)
 
@@ -115,8 +111,19 @@ def cli(path, jina_version, verbose):
 
             dockerfile.entrypoint = entrypoint_args
 
-        print(dockerfile.dumps())
         dockerfile.dump(dockerfile_path)
+
+
+@click.command()
+@click.argument('path', default='.')
+@click.option('--jina-version', default='master', help='Specify the jina version.')
+@click.option('--verbose', '-v', is_flag=True, help='Enables verbose mode.')
+@click.version_option(
+    f'{__version__} (Jina=v{__iina_version__})', prog_name='executor-normarlizer'
+)
+def cli(path, jina_version, verbose):
+    """Jina Executor Normalizer."""
+    normalize(path, jina_version=jina_version, verbose=verbose)
 
 
 if __name__ == '__main__':
