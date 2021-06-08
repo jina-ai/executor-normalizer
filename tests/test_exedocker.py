@@ -21,18 +21,19 @@ def test_entrypoint(exe_dockerfile):
 
 def test_baseimage(exe_dockerfile):
     assert exe_dockerfile.baseimage == 'jinaai/jina:master'
+    assert exe_dockerfile.lines[0] == 'FROM jinaai/jina:master\n'
 
     exe_dockerfile.baseimage = 'jinaai/jina:latest'
     assert exe_dockerfile.baseimage == 'jinaai/jina:latest'
-    assert exe_dockerfile.lines[1] == 'FROM jinaai/jina:latest\n'
+    assert exe_dockerfile.lines[0] == 'FROM jinaai/jina:latest\n'
 
 
-def test_dumps(exe_dockerfile):
+def test_dump(exe_dockerfile):
     import tempfile
 
     temp_file = tempfile.NamedTemporaryFile(delete=False)
 
-    exe_dockerfile.dumps(temp_file.name)
+    exe_dockerfile.dump(temp_file.name)
 
     with open(temp_file.name, 'r') as fp:
         lines = fp.readlines()

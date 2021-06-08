@@ -15,8 +15,7 @@ class ExecutorDockerfile:
 
         dockerfile_template = dedent(
             """\
-            ARG JINA_VERSION
-            FROM jinaai/jina:$JINA_VERSION
+            FROM jinaai/jina:{0}
 
             ARG JINA_VERSION
 
@@ -30,7 +29,7 @@ class ExecutorDockerfile:
             """
         )
 
-        self._parser.content = dockerfile_template
+        self._parser.content = dockerfile_template.format(build_args['JINA_VERSION'])
 
         self._has_unittests = False
 
@@ -86,4 +85,3 @@ class ExecutorDockerfile:
     def dump(self, dockerfile: str):
         with open(dockerfile, 'wb') as fp:
             fp.write(self._buffer.getvalue())
-            fp.write(b'\n')
