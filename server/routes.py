@@ -1,5 +1,5 @@
 import datetime
-from typing import Dict
+from typing import Dict, Optional
 
 from fastapi import APIRouter
 from fastapi.encoders import jsonable_encoder
@@ -13,8 +13,11 @@ router = APIRouter()
 
 
 class PackagePayload(BaseModel):
-    jina_version: str = 'master'
     package_path: str
+    executor_class: Optional[str] = None
+    executor_py_path: Optional[str] = None
+    config_yaml_path: Optional[str] = None
+    jina_version: str = 'master'
 
 
 class NormalizeResult(BaseModel):
@@ -28,7 +31,13 @@ def normalize(
 ):
     now = datetime.datetime.now()
 
-    _normalize(block_data.package_path, jina_version=block_data.jina_version)
+    _normalize(
+        block_data.package_path,
+        executor_class=block_data.executor_class,
+        executor_py_path=block_data.executor_py_path,
+        config_yaml_path=block_data.config_yaml_path,
+        jina_version=block_data.jina_version,
+    )
 
     result = {
         'success': True,
