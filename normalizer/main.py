@@ -44,7 +44,14 @@ def inspect_executors(py_modules: List[str]):
     return executors
 
 
-def normalize(path, jina_version: str = 'master', verbose: bool = False):
+def normalize(
+    path,
+    executor_class: str = None,
+    executor_py_path: str = None,
+    config_yaml_path: str = None,
+    jina_version: str = 'master',
+    verbose: bool = False,
+):
     work_path = pathlib.Path(path)
 
     if verbose:
@@ -52,7 +59,9 @@ def normalize(path, jina_version: str = 'master', verbose: bool = False):
 
     dockerfile_path = work_path / 'Dockerfile'
     manifest_path = work_path / 'manifest.yml'
-    config_path = work_path / 'config.yml'
+    config_path = (
+        pathlib.Path(config_yaml_path) if config_yaml_path else work_path / 'config.yml'
+    )
     readme_path = work_path / 'README.md'
     requirements_path = work_path / 'requirements.txt'
 
@@ -101,6 +110,13 @@ def normalize(path, jina_version: str = 'master', verbose: bool = False):
                 '--uses',
                 f'{config_path.relative_to(work_path)}',
             ]
+        elif executor_class:
+            entrypoint_args = ['jina', 'pod', '--uses', f'{executor_class}']
+            for p in py_glob:
+                entrypoint_args.append('--py-modules')
+                entrypoint_args.append(f'{p.relative_to(work_path)}')
+
+            dockerfile.entrypoint = entrypoint_args
         else:
             executors = inspect_executors(py_glob)
 
