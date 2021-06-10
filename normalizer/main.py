@@ -8,14 +8,14 @@ from jina.helper import colored, get_readable_size
 
 from . import __version__
 from .docker import ExecutorDockerfile
-from .helper import inspect_executors, load_manifest
+from .helper import inspect_executors, load_manifest, order_py_modules
 
 
 def filter_executors(executors):
     result = []
-    for executor, func_args, func_args_defaults, _ in executors:
+    for i, (executor, func_args, func_args_defaults, _) in enumerate(executors):
         if len(func_args) - len(func_args_defaults) == 1:
-            result.append(executor)
+            result.append(executors[i])
     return result
 
 
@@ -86,14 +86,16 @@ def normalize(
             elif len(executors) > 1:
                 raise Exception('Multiple executors')
 
-            entrypoint_args = ['jina', 'pod', '--uses', f'{executors[0]}']
-            for p in py_glob:
+            executor, *_ = executors[0]
+
+            py_moduels = order_py_modules(py_glob, work_path)
+
+            entrypoint_args = ['jina', 'pod', '--uses', f'{executor}']
+            for p in py_moduels:
                 entrypoint_args.append('--py-modules')
                 entrypoint_args.append(f'{p.relative_to(work_path)}')
 
             dockerfile.entrypoint = entrypoint_args
-
-        return
 
         dockerfile.dump(dockerfile_path)
 

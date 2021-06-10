@@ -1,5 +1,6 @@
 click==8.0.1
 dockerfile-parse==1.1.0
 fastapi
+importlab
 loguru>=0.5.3
 uvicorn>=0.12.1
