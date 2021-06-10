@@ -8,47 +8,19 @@ from jina.helper import colored, get_readable_size
 
 from . import __version__
 from .docker import ExecutorDockerfile
-from .helper import load_manifest
+from .helper import inspect_executors, load_manifest
 
 
-def inspect_executors(py_modules: List[str]):
-    def _inspect_class_defs(tree):
-        return [o for o in ast.walk(tree) if isinstance(o, ast.ClassDef)]
-
-    import ast
-
-    classes = []
-    for filepath in py_modules:
-        # with open(filename, mode='rt') as fin:
-        with filepath.open() as fin:
-            tree = ast.parse(fin.read(), filename=str(filepath))
-            # print(tree)
-            # print(filepath)
-            # for o in tree.body:
-            #     print(o)
-            classes.extend(_inspect_class_defs(tree))
-            # print(_inspect_class_defs(tree))
-    class_names = [obj.name for obj in classes]
-
-    executors = []
-    for base_class in classes[0].bases:
-        # if the test class looks like class Test(TestCase)
-        if isinstance(base_class, ast.Name):
-            base_name = base_class.id
-        # if the test class looks like class Test(unittest.TestCase):
-        if isinstance(base_class, ast.Attribute):
-            base_name = base_class.attr
-        if base_name == 'Executor':
-            executors.append(classes[0].name)
-
-    return executors
+def filter_executors(executors):
+    result = []
+    for executor, func_args, func_args_defaults, _ in executors:
+        if len(func_args) - len(func_args_defaults) == 1:
+            result.append(executor)
+    return result
 
 
 def normalize(
     path,
-    executor_class: str = None,
-    executor_py_path: str = None,
-    config_yaml_path: str = None,
     jina_version: str = 'master',
     verbose: bool = False,
 ):
@@ -59,15 +31,9 @@ def normalize(
 
     dockerfile_path = work_path / 'Dockerfile'
     manifest_path = work_path / 'manifest.yml'
-    config_path = (
-        pathlib.Path(config_yaml_path) if config_yaml_path else work_path / 'config.yml'
-    )
+    config_path = work_path / 'config.yml'
     readme_path = work_path / 'README.md'
     requirements_path = work_path / 'requirements.txt'
-
-    # py_glob = [_.as_posix() for _ in work_path.glob('*.py')]
-
-    # test_glob = [_.as_posix() for _ in work_path.glob('tests/test_*.py')]
 
     py_glob = list(work_path.glob('*.py'))
     test_glob = list(work_path.glob('tests/test_*.py'))
@@ -110,15 +76,15 @@ def normalize(
                 '--uses',
                 f'{config_path.relative_to(work_path)}',
             ]
-        elif executor_class:
-            entrypoint_args = ['jina', 'pod', '--uses', f'{executor_class}']
-            for p in py_glob:
-                entrypoint_args.append('--py-modules')
-                entrypoint_args.append(f'{p.relative_to(work_path)}')
-
-            dockerfile.entrypoint = entrypoint_args
         else:
             executors = inspect_executors(py_glob)
+
+            executors = filter_executors(executors)
+
+            if len(executors) == 0:
+                raise Exception('None of executors!')
+            elif len(executors) > 1:
+                raise Exception('Multiple executors')
 
             entrypoint_args = ['jina', 'pod', '--uses', f'{executors[0]}']
             for p in py_glob:
@@ -126,6 +92,8 @@ def normalize(
                 entrypoint_args.append(f'{p.relative_to(work_path)}')
 
             dockerfile.entrypoint = entrypoint_args
+
+        return
 
         dockerfile.dump(dockerfile_path)
 
