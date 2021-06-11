@@ -20,7 +20,7 @@ def create_app() -> FastAPI:
 
     api_router = APIRouter()
 
-    api_router.include_router(router, tags=['normalizer'], prefix='')
+    api_router.include_router(router, tags=['normalizer'], prefix='/api/v1')
 
     fast_app.include_router(api_router, prefix=API_PREFIX)
 

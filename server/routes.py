@@ -1,23 +1,22 @@
 import datetime
 from typing import Dict, Optional
-
+from pathlib import Path
 from fastapi import APIRouter
 from fastapi.encoders import jsonable_encoder
 from loguru import logger
 from pydantic import BaseModel
+from pydantic.utils import BUILTIN_COLLECTIONS
 from starlette.requests import Request
 
-from normalizer.main import normalize as _normalize
+from normalizer.core import normalize as _normalize
 
 router = APIRouter()
 
 
 class PackagePayload(BaseModel):
-    package_path: str
-    executor_class: Optional[str] = None
-    executor_py_path: Optional[str] = None
-    config_yaml_path: Optional[str] = None
-    jina_version: str = 'master'
+    package_path: Path
+    meta: Optional[Dict] = {'jina': 'master'}
+    env: Optional[Dict] = {}
 
 
 class NormalizeResult(BaseModel):
@@ -33,10 +32,8 @@ def normalize(
 
     _normalize(
         block_data.package_path,
-        executor_class=block_data.executor_class,
-        executor_py_path=block_data.executor_py_path,
-        config_yaml_path=block_data.config_yaml_path,
-        jina_version=block_data.jina_version,
+        meta=block_data.meta,
+        env=block_data.env,
     )
 
     result = {

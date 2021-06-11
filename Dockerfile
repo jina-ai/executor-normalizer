@@ -3,6 +3,9 @@ FROM jinaai/jina:master
 # setup the workspace
 WORKDIR /workspace
 
+COPY requirements.txt requirements.txt
+RUN pip install -r requirements.txt
+
 ADD . .
 
 RUN pip install .
