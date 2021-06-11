@@ -1,4 +1,5 @@
 import pathlib
+from typing import Dict
 
 from jina.helper import colored, get_readable_size
 
@@ -22,17 +23,28 @@ def filter_executors(executors):
 
 def normalize(
     work_path: 'pathlib.Path',
-    jina_version: str = 'master',
+    meta: Dict[str] = {'jina': 'master'},
+    env: Dict[str] = {},
     verbose: bool = False,
+    **kwargs,
 ) -> None:
     """Normalize the executor package.
 
     :param work_path: the executor folder where it located
-    :param jina_version: the version of Jina to work with
+    :param meta: the version info of the Jina to work with
+    :param env: the environment variables the Jina works with
     :param verbose : set verbose level
     """
     if verbose:
         print(f'=> The executor repository is located at: {work_path}')
+
+        print(f'=> The Jina version info: ')
+        for k, v in meta:
+            print('%20s: -> %20s' % (k, v))
+
+        print(f'=> The environment variables: ')
+        for k, v in env:
+            print('%20s: -> %20s' % (k, v))
 
     dockerfile_path = work_path / 'Dockerfile'
     manifest_path = work_path / 'manifest.yml'
@@ -69,7 +81,7 @@ def normalize(
     # manifest = load_manifest(manifest_path)
 
     if not dockerfile_path.exists():
-        dockerfile = ExecutorDockerfile(build_args={'JINA_VERSION': jina_version})
+        dockerfile = ExecutorDockerfile(build_args={'JINA_VERSION': meta['jina']})
 
         if len(test_glob) > 0:
             dockerfile.add_unitest()

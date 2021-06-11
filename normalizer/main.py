@@ -17,7 +17,7 @@ from .core import normalize
 )
 def cli(path, jina_version, verbose):
     """Jina Executor Normalizer."""
-    normalize(pathlib.Path(path), jina_version=jina_version, verbose=verbose)
+    normalize(pathlib.Path(path), meta={'jina': jina_version}, verbose=verbose)
 
 
 if __name__ == '__main__':
