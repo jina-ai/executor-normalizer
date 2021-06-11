@@ -23,8 +23,8 @@ def filter_executors(executors):
 
 def normalize(
     work_path: 'pathlib.Path',
-    meta: Dict[str] = {'jina': 'master'},
-    env: Dict[str] = {},
+    meta: Dict = {'jina': 'master'},
+    env: Dict = {},
     verbose: bool = False,
     **kwargs,
 ) -> None:
@@ -39,12 +39,17 @@ def normalize(
         print(f'=> The executor repository is located at: {work_path}')
 
         print(f'=> The Jina version info: ')
-        for k, v in meta:
+        for k, v in meta.items():
             print('%20s: -> %20s' % (k, v))
 
         print(f'=> The environment variables: ')
-        for k, v in env:
+        for k, v in env.items():
             print('%20s: -> %20s' % (k, v))
+
+    if not work_path.exists():
+        raise FileNotFoundError(
+            f'The folder "{work_path}" does not exist, can not normalize'
+        )
 
     dockerfile_path = work_path / 'Dockerfile'
     manifest_path = work_path / 'manifest.yml'
@@ -106,10 +111,11 @@ def normalize(
 
             executor, *_ = executors[0]
 
-            try:
-                py_moduels = order_py_modules(py_glob, work_path)
-            except Exception as ex:
-                raise DependencyError
+            py_moduels = py_glob
+            # try:
+            #     py_moduels = order_py_modules(py_glob, work_path)
+            # except Exception as ex:
+            #     raise DependencyError
 
             entrypoint_args = ['jina', 'pod', '--uses', f'{executor}']
             for p in py_moduels:
