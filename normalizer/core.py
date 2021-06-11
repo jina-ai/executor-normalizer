@@ -3,6 +3,12 @@ import pathlib
 from jina.helper import colored, get_readable_size
 
 from .docker import ExecutorDockerfile
+from .excepts import (
+    DependencyError,
+    ExecutorExistsError,
+    ExecutorNotFoundError,
+    IllegalExecutorError,
+)
 from .helper import inspect_executors, load_manifest, order_py_modules
 
 
@@ -15,12 +21,16 @@ def filter_executors(executors):
 
 
 def normalize(
-    path: 'pathlib.Path',
+    work_path: 'pathlib.Path',
     jina_version: str = 'master',
     verbose: bool = False,
-):
-    work_path = pathlib.Path(path)
+) -> None:
+    """Normalize the executor package.
 
+    :param work_path: the executor folder where it located
+    :param jina_version: the version of Jina to work with
+    :param verbose : set verbose level
+    """
     if verbose:
         print(f'=> The executor repository is located at: {work_path}')
 
@@ -56,7 +66,7 @@ def normalize(
     if not requirements_path.exists():
         requirements_path.touch()
 
-    manifest = load_manifest(manifest_path)
+    # manifest = load_manifest(manifest_path)
 
     if not dockerfile_path.exists():
         dockerfile = ExecutorDockerfile(build_args={'JINA_VERSION': jina_version})
@@ -73,17 +83,21 @@ def normalize(
             ]
         else:
             executors = inspect_executors(py_glob)
+            if len(executors) == 0:
+                raise ExecutorNotFoundError
+            if len(executors) > 1:
+                raise ExecutorExistsError
 
             executors = filter_executors(executors)
-
             if len(executors) == 0:
-                raise Exception('None of executors!')
-            elif len(executors) > 1:
-                raise Exception('Multiple executors')
+                raise IllegalExecutorError
 
             executor, *_ = executors[0]
 
-            py_moduels = order_py_modules(py_glob, work_path)
+            try:
+                py_moduels = order_py_modules(py_glob, work_path)
+            except Exception as ex:
+                raise DependencyError
 
             entrypoint_args = ['jina', 'pod', '--uses', f'{executor}']
             for p in py_moduels:
