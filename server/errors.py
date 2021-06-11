@@ -1,6 +1,7 @@
-from enum import Enum
+from enum import Enum, unique
 
 
+@unique
 class ErrorCode(Enum):
     ExecutorNotFound = 4000
     ExecutorExists = 4001

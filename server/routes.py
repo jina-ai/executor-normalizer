@@ -1,7 +1,7 @@
 import traceback
 import sys
 import datetime
-from typing import Dict, Optional
+from typing import Dict, Any, Optional
 from pathlib import Path
 from fastapi import APIRouter
 from fastapi.encoders import jsonable_encoder
@@ -24,7 +24,10 @@ class PackagePayload(BaseModel):
 
 
 class NormalizeResult(BaseModel):
-    result: Dict
+    success: bool
+    code: int
+    data: Any
+    message: str
 
 
 @router.post('/', name='normalizer')
@@ -50,27 +53,27 @@ def normalize(
     except Exception as ex:
         result['success'] = False
         if isinstance(ex, excepts.ExecutorNotFoundError):
-            result['code'] = ErrorCode.ExecutorNotFound
+            result['code'] = ErrorCode.ExecutorNotFound.value
             result['message'] = 'None of executor can be found!'
         elif isinstance(ex, excepts.ExecutorExistsError):
-            result['code'] = ErrorCode.ExecutorExists
+            result['code'] = ErrorCode.ExecutorExists.value
             result[
                 'message'
             ] = 'Multiple executors are placed at one package, which is not allowed by Jina Hub now!'
         elif isinstance(ex, excepts.IllegalExecutorError):
-            result['code'] = ErrorCode.IllegalExecutor
+            result['code'] = ErrorCode.IllegalExecutor.value
             result[
                 'message'
             ] = 'The uploaded executor is illegal, please double check it!'
         elif isinstance(ex, excepts.DependencyError):
-            result['code'] = ErrorCode.BrokenDependency
+            result['code'] = ErrorCode.BrokenDependency.value
             result[
                 'message'
             ] = 'The uploaded executor contains cycing and missing dependencies'
         else:
-            result['code'] = ErrorCode.Others
-            exc_type, exc_value, exc_tb = sys.exc_info()
-            result['message'] = traceback.format_exception(exc_type, exc_value, exc_tb)
+            result['code'] = ErrorCode.Others.value
+
+            result['message'] = str(ex)
 
     logger.info(
         {
@@ -79,4 +82,9 @@ def normalize(
             'response': result,
         }
     )
-    return NormalizeResult(result=result)
+    return NormalizeResult(
+        success=result['success'],
+        code=result['code'],
+        data=result['data'],
+        message=result['message'],
+    )
