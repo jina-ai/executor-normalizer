@@ -29,18 +29,24 @@ def inspect_executors(py_modules: List['pathlib.Path']):
                 if base_name != 'Executor':
                     continue
 
+                has_init_func = False
                 for body_item in class_def.body:
                     # check __init__ function arguments
                     if (
                         isinstance(body_item, ast.FunctionDef)
                         and body_item.name == '__init__'
                     ):
+                        has_init_func = True
 
                         func_args = body_item.args.args
                         func_args_defaults = body_item.args.defaults
 
                         executors.append(
                             (class_def.name, func_args, func_args_defaults, filepath)
+                        )
+                if not has_init_func:
+                    executors.append(
+                            (class_def.name, ['self'], [], filepath)
                         )
 
     return executors

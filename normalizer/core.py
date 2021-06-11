@@ -99,6 +99,7 @@ def normalize(
                 f'{config_path.relative_to(work_path)}',
             ]
         else:
+            print(py_glob)
             executors = inspect_executors(py_glob)
             if len(executors) == 0:
                 raise ExecutorNotFoundError
