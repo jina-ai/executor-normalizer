@@ -122,7 +122,7 @@ def normalize(
         print(
             f'=> checking executor repository ...\n'
             + '\n'.join(
-                f'\t{colored("✓", "green") if v else colored("✗", "red"):>4} {k:<20} {v}'
+                f'\t{colored("✓", "green") if (v if isinstance(v, list) else v.exists()) else colored("✗", "red"):>4} {k:<20} {v}'
                 for k, v in completeness.items()
             )
             + '\n'
