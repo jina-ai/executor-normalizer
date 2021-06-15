@@ -1,0 +1,6 @@
+jtype: {{ executor }}
+metas:
+  py_modules:
+  {% for m in py_modules -%}
+    {{ "  - " + m }}
+  {% endfor %}

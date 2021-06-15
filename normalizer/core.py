@@ -2,6 +2,7 @@ import pathlib
 from typing import Dict
 
 from jina.helper import colored, get_readable_size
+import jinja2
 
 from .docker import ExecutorDockerfile
 from .excepts import (
@@ -10,7 +11,13 @@ from .excepts import (
     ExecutorNotFoundError,
     IllegalExecutorError,
 )
-from .helper import inspect_executors, load_manifest, order_py_modules
+from .helper import (
+    inspect_executors,
+    get_config_template,
+    load_manifest,
+    order_py_modules,
+)
+from normalizer import excepts
 
 
 def filter_executors(executors):
@@ -85,44 +92,46 @@ def normalize(
 
     # manifest = load_manifest(manifest_path)
 
+    executor = None
+
+    if not config_path.exists():
+        # inspect executor
+        executors = inspect_executors(py_glob)
+        if len(executors) == 0:
+            raise ExecutorNotFoundError
+        if len(executors) > 1:
+            raise ExecutorExistsError
+
+        executors = filter_executors(executors)
+        if len(executors) == 0:
+            raise IllegalExecutorError
+
+        executor, *_ = executors[0]
+        # try:
+        #     py_moduels = order_py_modules(py_glob, work_path)
+        # except Exception as ex:
+        #     raise DependencyError
+        py_modules = [f'{p.relative_to(work_path)}' for p in py_glob]
+
+        # render config.yml content
+        template = get_config_template()
+        config_content = template.render(executor=executor, py_modules=py_modules)
+
+        # dump config.yml
+        with open(config_path, 'w') as f:
+            f.write(config_content)
+
     if not dockerfile_path.exists():
         dockerfile = ExecutorDockerfile(build_args={'JINA_VERSION': meta['jina']})
 
         if len(test_glob) > 0:
             dockerfile.add_unitest()
 
-        if config_path.exists():
-            dockerfile.entrypoint = [
-                'jina',
-                'pod',
-                '--uses',
-                f'{config_path.relative_to(work_path)}',
-            ]
-        else:
-            print(py_glob)
-            executors = inspect_executors(py_glob)
-            if len(executors) == 0:
-                raise ExecutorNotFoundError
-            if len(executors) > 1:
-                raise ExecutorExistsError
-
-            executors = filter_executors(executors)
-            if len(executors) == 0:
-                raise IllegalExecutorError
-
-            executor, *_ = executors[0]
-
-            py_moduels = py_glob
-            # try:
-            #     py_moduels = order_py_modules(py_glob, work_path)
-            # except Exception as ex:
-            #     raise DependencyError
-
-            entrypoint_args = ['jina', 'pod', '--uses', f'{executor}']
-            for p in py_moduels:
-                entrypoint_args.append('--py-modules')
-                entrypoint_args.append(f'{p.relative_to(work_path)}')
-
-            dockerfile.entrypoint = entrypoint_args
+        dockerfile.entrypoint = [
+            'jina',
+            'pod',
+            '--uses',
+            f'{config_path.relative_to(work_path)}',
+        ]
 
         dockerfile.dump(dockerfile_path)

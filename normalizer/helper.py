@@ -1,6 +1,7 @@
+import ast
 import pathlib
 from typing import Dict, List
-
+from jinja2 import Environment, FileSystemLoader
 from jina.jaml import JAML
 
 from . import __resources_path__
@@ -9,8 +10,6 @@ from . import __resources_path__
 def inspect_executors(py_modules: List['pathlib.Path']):
     def _inspect_class_defs(tree):
         return [o for o in ast.walk(tree) if isinstance(o, ast.ClassDef)]
-
-    import ast
 
     executors = []
     for filepath in py_modules:
@@ -45,9 +44,7 @@ def inspect_executors(py_modules: List['pathlib.Path']):
                             (class_def.name, func_args, func_args_defaults, filepath)
                         )
                 if not has_init_func:
-                    executors.append(
-                            (class_def.name, ['self'], [], filepath)
-                        )
+                    executors.append((class_def.name, ['self'], [], filepath))
 
     return executors
 
@@ -64,6 +61,12 @@ def load_manifest(yaml_path: 'pathlib.Path') -> Dict:
             tmp.update(JAML.load(fp))
 
     return tmp
+
+
+def get_config_template():
+    """Load a Jinja2 template for config.yml"""
+    env = Environment(loader=FileSystemLoader(__resources_path__ / 'templates'))
+    return env.get_template('config.yml.jinja2')
 
 
 def order_py_modules(py_modules: List['pathlib.Path'], work_path: 'pathlib.Path'):
