@@ -3,6 +3,13 @@
 
 ***🦆 Note: `master` branch is the developing branch.**
 
+## 💡 Features
+
+- ✅ Complete `config.yml`
+- ✅ Complete `Dockerfile`
+- ✅ Identify `Executor` class name
+- ✅ Identify **Illegal** executor
+- ✅ Support **toplogical sort of py-modules** based on theire dependency relations
 
 ## 🚀 Setup
 
