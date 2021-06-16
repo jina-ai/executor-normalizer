@@ -2,7 +2,8 @@ import pathlib
 from typing import Dict, List
 from jinja2 import Environment, FileSystemLoader
 from jina.jaml import JAML
-
+from importlab.import_finder import get_imports
+from importlab.resolve import convert_to_path
 from . import __resources_path__
 
 
@@ -26,23 +27,25 @@ def get_config_template():
     return env.get_template('config.yml.jinja2')
 
 
-def order_py_modules(py_modules: List['pathlib.Path'], work_path: 'pathlib.Path'):
-    from importlab.import_finder import get_imports
+def resolve_import(name, alias, is_from, is_star, work_path):
+    """Use python to resolve an import.
 
-    dependencies = {x: [] for x in py_modules}
+    :argument name: The fully qualified module name.
+    :returns: the path to the module source file or None.
+    """
 
-    def _import_to_path(import_stmt):
-        parts = list(import_stmt.split('.'))
-        parts[-1] += '.py'
-        return work_path / pathlib.Path('/'.join(parts))
+    py_path = work_path / pathlib.Path(convert_to_path(name)[0])
 
-    for py_module in py_modules:
-        py_imports = [m[0] for m in get_imports(py_module) if m[-1] is None]
-        py_import_moduels = [_import_to_path(m) for m in py_imports]
-        dependencies[py_module].extend(py_import_moduels)
+    while True:
+        if py_path.is_dir():
+            if (py_path / '__init__.py').exists():
+                return py_path / '__init__.py'
+            return None
 
-    orders = list(topological_sort([(k, v) for k, v in dependencies.items()]))
-    return orders
+        if py_path.with_suffix('.py').exists():
+            return py_path.with_suffix('.py')
+        else:
+            py_path = py_path.parent
 
 
 # copy from: https://stackoverflow.com/a/11564323

@@ -14,10 +14,25 @@ from .excepts import (
 )
 from .helper import (
     get_config_template,
-    load_manifest,
-    order_py_modules,
+    get_imports,
+    resolve_import,
+    topological_sort,
 )
 from normalizer import excepts
+
+
+def order_py_modules(py_modules: List['pathlib.Path'], work_path: 'pathlib.Path'):
+
+    dependencies = {x: [] for x in py_modules}
+
+    for py_module in py_modules:
+        py_imports = [m[:-1] for m in get_imports(py_module) if m[-1] is None]
+
+        py_import_moduels = [resolve_import(*m, work_path) for m in py_imports]
+        dependencies[py_module].extend(py_import_moduels)
+
+    orders = list(topological_sort([(k, v) for k, v in dependencies.items()]))
+    return orders
 
 
 def inspect_executors(py_modules: List['pathlib.Path']):
@@ -60,6 +75,7 @@ def inspect_executors(py_modules: List['pathlib.Path']):
                     executors.append((class_def.name, ['self'], [], filepath))
 
     return executors
+
 
 def filter_executors(executors):
     result = []
@@ -148,11 +164,11 @@ def normalize(
             raise IllegalExecutorError
 
         executor, *_ = executors[0]
-        # try:
-        #     py_moduels = order_py_modules(py_glob, work_path)
-        # except Exception as ex:
-        #     raise DependencyError
-        py_modules = [f'{p.relative_to(work_path)}' for p in py_glob]
+        try:
+            py_moduels = order_py_modules(py_glob, work_path)
+        except Exception as ex:
+            raise DependencyError
+        py_modules = [f'{p.relative_to(work_path)}' for p in py_moduels]
 
         # render config.yml content
         template = get_config_template()
