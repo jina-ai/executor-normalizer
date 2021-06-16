@@ -29,7 +29,12 @@ def order_py_modules(py_modules: List['pathlib.Path'], work_path: 'pathlib.Path'
         py_imports = [m[:-1] for m in get_imports(py_module) if m[-1] is None]
 
         py_import_moduels = [resolve_import(*m, work_path) for m in py_imports]
-        dependencies[py_module].extend(py_import_moduels)
+        for imp_m in py_import_moduels:
+            if imp_m is None:
+                continue
+            if imp_m not in dependencies:
+                dependencies[imp_m] = []
+            dependencies[py_module].append(imp_m)
 
     orders = list(topological_sort([(k, v) for k, v in dependencies.items()]))
     return orders
