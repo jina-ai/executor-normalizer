@@ -186,12 +186,12 @@ def normalize(
     if not dockerfile_path.exists():
         dockerfile = ExecutorDockerfile(build_args={'JINA_VERSION': meta['jina']})
 
-        if len(test_glob) > 0:
-            dockerfile.add_unitest()
+        # if len(test_glob) > 0:
+        #     dockerfile.add_unitest()
 
         dockerfile.entrypoint = [
             'jina',
-            'pod',
+            'executor',
             '--uses',
             f'{config_path.relative_to(work_path)}',
         ]
