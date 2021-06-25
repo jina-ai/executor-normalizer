@@ -21,6 +21,10 @@ class ExecutorDockerfile:
 
             ARG JINA_VERSION
 
+            # install the third-party requirements
+            RUN apt-get update && apt-get install --no-install-recommends -y gcc build-essential git \
+                && rm -rf /var/lib/apt/lists/*
+
             # setup the workspace
             COPY . /workspace
             WORKDIR /workspace
