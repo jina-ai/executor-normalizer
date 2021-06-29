@@ -17,6 +17,7 @@ from .helper import (
     get_imports,
     resolve_import,
     topological_sort,
+    choose_jina_version,
 )
 from normalizer import excepts
 
@@ -184,7 +185,7 @@ def normalize(
             f.write(config_content)
 
     if not dockerfile_path.exists():
-        dockerfile = ExecutorDockerfile(build_args={'JINA_VERSION': meta['jina']})
+        dockerfile = ExecutorDockerfile(build_args={'JINA_VERSION': choose_jina_version(meta['jina'])})
 
         # if len(test_glob) > 0:
         #     dockerfile.add_unitest()
