@@ -3,13 +3,13 @@ from pathlib import Path
 
 import pytest
 
-from normalizer import helper
+from normalizer import core
 
 cur_dir = os.path.dirname(os.path.abspath(__file__))
 
 
 def test_inspect_dummy_execs():
-    executors = helper.inspect_executors([Path(cur_dir) / 'cases' / 'dummy_exec.py'])
+    executors = core.inspect_executors([Path(cur_dir) / 'cases' / 'dummy_exec.py'])
     assert len(executors) == 4
     assert executors[0][0] == 'DummyExecutor'
     assert executors[1][0] == 'Dummy2Executor'

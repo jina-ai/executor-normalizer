@@ -21,11 +21,11 @@ def test_entrypoint(exe_dockerfile):
 
 def test_baseimage(exe_dockerfile):
     assert exe_dockerfile.baseimage == 'jinaai/jina:master'
-    assert exe_dockerfile.lines[0] == 'FROM jinaai/jina:master\n'
+    assert exe_dockerfile.lines[3] == 'FROM jinaai/jina:master\n'
 
     exe_dockerfile.baseimage = 'jinaai/jina:latest'
     assert exe_dockerfile.baseimage == 'jinaai/jina:latest'
-    assert exe_dockerfile.lines[0] == 'FROM jinaai/jina:latest\n'
+    assert exe_dockerfile.lines[3] == 'FROM jinaai/jina:latest\n'
 
 
 def test_dump(exe_dockerfile):

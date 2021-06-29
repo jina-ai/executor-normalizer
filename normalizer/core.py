@@ -192,7 +192,6 @@ def normalize(
         if requirements_path.exists():
             dockerfile.add_pip_install()
 
-
         dockerfile.entrypoint = [
             'jina',
             'executor',
