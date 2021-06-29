@@ -30,9 +30,6 @@ class ExecutorDockerfile:
             COPY . /workspace
             WORKDIR /workspace
 
-            # install the third-party requirements
-            RUN pip install -r requirements.txt
-
             """
         )
 
@@ -50,6 +47,15 @@ class ExecutorDockerfile:
             """\
             # for testing the image
             RUN pip install pytest && pytest
+
+            """
+        )
+
+    def add_pip_install(self):
+        self._parser.content += dedent(
+            """\
+            # install the third-party requirements
+            RUN pip install -r requirements.txt
 
             """
         )

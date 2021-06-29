@@ -149,8 +149,8 @@ def normalize(
             + '\n'
         )
 
-    if not requirements_path.exists():
-        requirements_path.touch()
+    # if not requirements_path.exists():
+    #     requirements_path.touch()
 
     # manifest = load_manifest(manifest_path)
 
@@ -188,6 +188,10 @@ def normalize(
 
         # if len(test_glob) > 0:
         #     dockerfile.add_unitest()
+
+        if requirements_path.exists():
+            dockerfile.add_pip_install()
+
 
         dockerfile.entrypoint = [
             'jina',
