@@ -83,3 +83,31 @@ def topological_sort(source):
             )
         pending = next_pending
         emitted = next_emitted
+
+def choose_jina_version(client_version: str) -> str:
+    if (client_version == 'master'):
+        return 'master'
+
+    from distutils.version import LooseVersion
+
+    latest_version = get_jina_latest_version()
+
+    return latest_version if LooseVersion(client_version) > LooseVersion(latest_version) else client_version
+
+def get_jina_latest_version() -> str:
+    try:
+        from urllib.request import Request, urlopen
+        import json
+
+        req = Request(
+            'https://api.jina.ai/latest', headers={'User-Agent': 'Mozilla/5.0'}
+        )
+
+        with urlopen(
+            req, timeout=1
+        ) as resource:
+            latest_ver = json.load(resource)['version']
+
+            return latest_ver
+    except:
+        raise
