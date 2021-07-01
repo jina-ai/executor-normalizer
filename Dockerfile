@@ -1,4 +1,9 @@
-FROM jinaai/jina:master
+FROM replco/upm:full as upm_full
+
+
+FROM jinaai/jina:latest
+
+COPY --from=upm_full /usr/local/bin/upm /usr/local/bin/upm
 
 # setup the workspace
 WORKDIR /workspace

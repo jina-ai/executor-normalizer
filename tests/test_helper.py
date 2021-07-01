@@ -1,5 +1,6 @@
 from normalizer import helper
 
+
 def test_choose_jina_version(mocker):
     mocker.patch('normalizer.helper.get_jina_latest_version', return_value='2.0.0rc10')
 
