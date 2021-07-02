@@ -1,10 +1,8 @@
 import ast
 import pathlib
 from typing import Dict, List
-
 from jina.helper import colored, get_readable_size
-import jinja2
-
+from .deps import get_all_imports, get_imports_info, get_pkg_names
 from .docker import ExecutorDockerfile
 from .excepts import (
     DependencyError,
@@ -19,7 +17,6 @@ from .helper import (
     topological_sort,
     choose_jina_version,
 )
-from normalizer import excepts
 
 
 def order_py_modules(py_modules: List['pathlib.Path'], work_path: 'pathlib.Path'):
@@ -184,8 +181,20 @@ def normalize(
         with open(config_path, 'w') as f:
             f.write(config_content)
 
+    candidates = get_all_imports(work_path)
+    candidates = get_pkg_names(candidates)
+    if verbose:
+        print(f'Found imports: {candidates}')
+
+    imports = get_imports_info(candidates)
+    if verbose:
+        print(f'Found packages: {imports}')
+
     if not dockerfile_path.exists():
-        dockerfile = ExecutorDockerfile(build_args={'JINA_VERSION': choose_jina_version(meta['jina'])})
+
+        dockerfile = ExecutorDockerfile(
+            build_args={'JINA_VERSION': choose_jina_version(meta['jina'])}
+        )
 
         # if len(test_glob) > 0:
         #     dockerfile.add_unitest()

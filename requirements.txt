@@ -4,4 +4,6 @@ fastapi
 importlab
 Jinja2==3.0.1
 loguru>=0.5.3
+pipreqs
+pypi-simple
 uvicorn>=0.12.1
