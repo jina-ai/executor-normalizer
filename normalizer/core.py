@@ -1,8 +1,15 @@
 import ast
 import pathlib
 from typing import Dict, List
+from loguru import logger
 from jina.helper import colored, get_readable_size
-from .deps import get_all_imports, get_imports_info, get_pkg_names
+from .deps import (
+    get_all_imports,
+    get_imports_info,
+    get_pkg_names,
+    dump_requirements,
+    parse_requirements,
+)
 from .docker import ExecutorDockerfile
 from .excepts import (
     DependencyError,
@@ -138,7 +145,7 @@ def normalize(
     }
 
     if verbose:
-        print(
+        logger.info(
             f'=> checking executor repository ...\n'
             + '\n'.join(
                 f'\t{colored("✓", "green") if (v if isinstance(v, list) else v.exists()) else colored("✗", "red"):>4} {k:<20} {v}'
@@ -181,14 +188,21 @@ def normalize(
         with open(config_path, 'w') as f:
             f.write(config_content)
 
-    candidates = get_all_imports(work_path)
-    candidates = get_pkg_names(candidates)
-    if verbose:
-        print(f'Found imports: {candidates}')
+    if requirements_path.exists():
+        imports = parse_requirements(requirements_path)
+    else:
+        candidates = get_all_imports(work_path)
+        candidates = get_pkg_names(candidates)
+        if verbose:
+            logger.info(f'=> imports pakcages: {candidates}')
 
-    imports = get_imports_info(candidates)
-    if verbose:
-        print(f'Found packages: {imports}')
+        imports = get_imports_info(candidates)
+        if verbose:
+            logger.info(f'=> import pypi package : {imports}')
+            logger.info(f'=> writing {len(imports)} requirements.txt')
+
+        if len(imports) > 0:
+            dump_requirements(requirements_path, imports)
 
     if not dockerfile_path.exists():
 
