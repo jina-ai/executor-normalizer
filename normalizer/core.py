@@ -4,9 +4,12 @@ from typing import Dict, List
 from loguru import logger
 from jina.helper import colored, get_readable_size
 from .deps import (
+    Package,
     get_all_imports,
-    get_imports_info,
+    get_import_info,
     get_pkg_names,
+    get_dep_tools,
+    get_baseimage,
     dump_requirements,
     parse_requirements,
 )
@@ -95,11 +98,21 @@ def filter_executors(executors):
     return result
 
 
+def prelude(imports: List['Package']):
+    dep_tools = set([])
+    base_images = set([])
+    for pkg in imports:
+        dep_tools.add(get_dep_tools(pkg))
+        _base_image = get_baseimage(pkg)
+        if _base_image:
+            base_images.add(_base_image)
+    return base_images, dep_tools
+
+
 def normalize(
     work_path: 'pathlib.Path',
     meta: Dict = {'jina': 'master'},
     env: Dict = {},
-    verbose: bool = False,
     **kwargs,
 ) -> None:
     """Normalize the executor package.
@@ -107,18 +120,17 @@ def normalize(
     :param work_path: the executor folder where it located
     :param meta: the version info of the Jina to work with
     :param env: the environment variables the Jina works with
-    :param verbose : set verbose level
     """
-    if verbose:
-        print(f'=> The executor repository is located at: {work_path}')
 
-        print(f'=> The Jina version info: ')
-        for k, v in meta.items():
-            print('%20s: -> %20s' % (k, v))
+    logger.debug(f'=> The executor repository is located at: {work_path}')
 
-        print(f'=> The environment variables: ')
-        for k, v in env.items():
-            print('%20s: -> %20s' % (k, v))
+    logger.debug(f'=> The Jina version info: ')
+    for k, v in meta.items():
+        logger.debug('%20s: -> %20s' % (k, v))
+
+    logger.debug(f'=> The environment variables: ')
+    for k, v in env.items():
+        logger.debug('%20s: -> %20s' % (k, v))
 
     if not work_path.exists():
         raise FileNotFoundError(
@@ -144,15 +156,14 @@ def normalize(
         'tests': test_glob,
     }
 
-    if verbose:
-        logger.info(
-            f'=> checking executor repository ...\n'
-            + '\n'.join(
-                f'\t{colored("✓", "green") if (v if isinstance(v, list) else v.exists()) else colored("✗", "red"):>4} {k:<20} {v}'
-                for k, v in completeness.items()
-            )
-            + '\n'
+    logger.info(
+        f'=> checking executor repository ...\n'
+        + '\n'.join(
+            f'\t{colored("✓", "green") if (v if isinstance(v, list) else v.exists()) else colored("✗", "red"):>4} {k:<20} {v}'
+            for k, v in completeness.items()
         )
+        + '\n'
+    )
 
     # if not requirements_path.exists():
     #     requirements_path.touch()
@@ -190,19 +201,21 @@ def normalize(
 
     if requirements_path.exists():
         imports = parse_requirements(requirements_path)
+        logger.debug(f'=> existed imports: {imports}')
     else:
         candidates = get_all_imports(work_path)
         candidates = get_pkg_names(candidates)
-        if verbose:
-            logger.info(f'=> imports pakcages: {candidates}')
 
-        imports = get_imports_info(candidates)
-        if verbose:
-            logger.info(f'=> import pypi package : {imports}')
-            logger.info(f'=> writing {len(imports)} requirements.txt')
+        logger.debug(f'=> inspect imports: {candidates}')
+
+        imports = [get_import_info(m) for m in candidates]
+        logger.debug(f'=> import pypi package : {imports}')
+        logger.debug(f'=> writing {len(imports)} requirements.txt')
 
         if len(imports) > 0:
             dump_requirements(requirements_path, imports)
+
+    base_images, dep_tools = prelude(imports)
 
     if not dockerfile_path.exists():
 

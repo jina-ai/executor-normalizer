@@ -1,14 +1,46 @@
-from typing import List, Dict, Optional
+from platform import version
+from typing import List, Dict, Optional, Tuple
 from pathlib import Path
 from packaging.version import parse
 
 from pipreqs import pipreqs
 from pypi_simple import PyPISimple
-from loguru._logger import Logger
+
+from collections import namedtuple
+
+Package = namedtuple('Package', ['name', 'version'])
 
 
-def get_sys_deps(requiremnt: 'Path'):
-    pass
+def get_dep_tools(pkg: str):
+    tool_deps = []
+    if pkg.name.startswith('git'):
+        tool_deps.append('git')
+    return tool_deps
+
+
+def get_baseimage(pkg: str) -> Tuple[str, str]:
+    base_image = None
+    version_tag = None
+    if pkg.name in ['tensorflow', 'tensorflow-cpu', 'tensorflow-gpu']:
+        base_image = 'tensorflow/tensorflow'
+        version_tag = pkg.version
+        if pkg.name == 'tensorflow-gpu':
+            version_tag += '-gpu'
+        if pkg.version <= '2.1.0':
+            version_tag += f'-py3'
+    elif pkg.name == 'pytorch':
+        if pkg.version.endswith('+cpu'):
+            base_image = 'bitnami/pytorch'
+            version_tag = pkg.version.split('+')[0]
+        else:
+            base_image = 'pytorch/pytorch'
+            version_tag = f'{pkg.version}-cuda10.2-cudnn7-runtime'
+    else:
+        # return None, None
+        return None
+
+    # return base_image, version_tag
+    return f'{base_image}:{version_tag}'
 
 
 def get_all_imports(
@@ -37,20 +69,10 @@ def get_import_info(import_name):
             ]
 
             if pkg.project == import_name:
-                return pkg
+                return Package(pkg.project, pkg.version)
     except Exception as ex:
         # print(f'Package {import_name} does not exist or network problems')
         return None
-
-
-def get_imports_info(imports):
-    result = []
-
-    for item in imports:
-        pkg = get_import_info(item)
-        if pkg:
-            result.append({'name': pkg.project, 'version': pkg.version})
-    return result
 
 
 def get_pkg_names(pkgs):
@@ -67,10 +89,10 @@ def dump_requirements(path: 'Path', imports: List[Dict] = []):
     with path.open('w') as f:
 
         for m in imports:
-            if 'version' in m:
-                f.write(f'{m["name"]}=={m["version"]}\n')
+            if m.version:
+                f.write(f'{m.name}=={m.version}\n')
             else:
-                f.write(f'{m["name"]}\n')
+                f.write(f'{m.name}\n')
 
 
 def parse_requirements(path: 'Path'):
