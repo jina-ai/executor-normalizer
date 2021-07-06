@@ -1,14 +1,13 @@
-import os
 from pathlib import Path
 import pytest
 
-from normalizer import core
-
-cur_dir = os.path.dirname(os.path.abspath(__file__))
+from normalizer import deps, core
 
 
 def test_inspect_dummy_execs():
-    executors = core.inspect_executors([Path(cur_dir) / 'cases' / 'dummy_exec.py'])
+    executors = core.inspect_executors(
+        [Path(__file__).parent / 'cases' / 'simple_case' / 'dummy_exec.py']
+    )
     assert len(executors) == 4
     assert executors[0][0] == 'DummyExecutor'
     assert executors[1][0] == 'Dummy2Executor'
@@ -26,3 +25,17 @@ def test_inspect_dummy_execs():
     # failed case
     assert len(executors[3][1]) == 2
     assert len(executors[3][2]) == 0
+
+
+def test_prelude():
+    imports = [
+        deps.Package(name='tensorflow', version='2.5.0'),
+        deps.Package(name='pytorch', version='1.6.0'),
+        deps.Package(name='git+http://www.github.com', version=None),
+    ]
+
+    base_images, tools = core.prelude(imports)
+    assert base_images == set(
+        ['tensorflow/tensorflow:2.5.0', 'pytorch/pytorch:1.6.0-cuda10.2-cudnn7-runtime']
+    )
+    assert tools == set(['git'])

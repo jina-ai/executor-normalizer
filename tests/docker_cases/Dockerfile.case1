@@ -1,0 +1,8 @@
+FROM jinaai/jina:2.0
+
+COPY . /workspace
+WORKDIR /workspace
+
+RUN pip install .
+
+ENTRYPOINT ["jina", "executor", "--uses", "config.yml"]

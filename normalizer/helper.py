@@ -116,3 +116,13 @@ def get_jina_latest_version() -> str:
             return latest_ver
     except:
         return None
+
+
+def get_jina_image_tag(jina_version, py_version):
+    py_tag = 'py37'
+    if py_version.startswith('3.8'):
+        py_tag = 'py38'
+    elif py_version.startswith('3.9'):
+        py_tag = 'py39'
+
+    return f'{jina_version}-{py_tag}'
