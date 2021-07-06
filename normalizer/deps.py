@@ -13,7 +13,7 @@ Package = namedtuple('Package', ['name', 'version'])
 
 def get_dep_tools(pkg: str):
     tool_deps = []
-    if pkg.name.startswith('git'):
+    if 'git+http' in pkg.name:
         tool_deps.append('git')
     return tool_deps
 
@@ -28,7 +28,7 @@ def get_baseimage(pkg: str) -> Tuple[str, str]:
             version_tag += '-gpu'
         if pkg.version <= '2.1.0':
             version_tag += f'-py3'
-    elif pkg.name == 'pytorch':
+    elif pkg.name in ['pytorch', 'torch']:
         if pkg.version.endswith('+cpu'):
             base_image = 'bitnami/pytorch'
             version_tag = pkg.version.split('+')[0]

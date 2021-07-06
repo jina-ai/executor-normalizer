@@ -15,9 +15,9 @@ def test_imports():
 
 
 def test_get_imports():
-    imports = deps.get_all_imports(cur_dir + '/cases')
+    imports = deps.get_all_imports(cur_dir + '/cases/simple_case')
 
-    assert imports == ['jina']
+    assert set(imports) == set(['jina', 'tensorflow'])
 
 
 def test_get_import_info():

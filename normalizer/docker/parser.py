@@ -14,7 +14,7 @@ class ExecutorDockerfile:
         self, docker_file: 'Path' = None, build_args: Dict = {'JINA_VERSION': 'master'}
     ):
         self._buffer = io.BytesIO()
-        if (docker_file is not None) and docker_file.exists():
+        if docker_file and docker_file.exists():
             self._buffer.write(docker_file.open('rb').read())
             self._parser = DockerfileParser(
                 fileobj=self._buffer, env_replace=True, build_args=build_args
@@ -34,14 +34,6 @@ class ExecutorDockerfile:
 
                 ARG JINA_VERSION
 
-                # # install the third-party requirements
-                # RUN apt-get update && apt-get install --no-install-recommends -y gcc build-essential git \
-                #     && rm -rf /var/lib/apt/lists/*
-
-                # # setup the workspace
-                # COPY . /workspace
-                # WORKDIR /workspace
-
                 """
             )
 
@@ -56,32 +48,29 @@ class ExecutorDockerfile:
         instruction_template = dedent(
             """\
             # install the third-party requirements
-            RUN apt-get update && apt-get install --no-install-recommends -y {0} \
+            RUN apt-get update && apt-get install --no-install-recommends -y {0} \\
                 && rm -rf /var/lib/apt/lists/*
 
             """
         )
-        instruction = instruction_template.format(' '.join(tools))
-        self._parser.content += isinstance
+        content = instruction_template.format(' '.join(tools))
+        self._parser.content += content
 
-    def add_work_dir(self, tools):
-        instruction_template = dedent(
-            """\
-            # install the third-party requirements
-            RUN apt-get update && apt-get install --no-install-recommends -y {0} \
-                && rm -rf /var/lib/apt/lists/*
-
-            """
-        )
-        instruction = instruction_template.format(' '.join(tools))
-        self._parser.content += isinstance
-
-    def add_unitest(self):
-        self._parser.content += dedent(
+    def add_work_dir(self):
+        content = dedent(
             """\
             # setup the workspace
             COPY . /workspace
             WORKDIR /workspace
+
+            """
+        )
+        self._parser.content += content
+
+    def add_unitest(self):
+        self._parser.content += dedent(
+            """\
+
             """
         )
 
@@ -93,6 +82,10 @@ class ExecutorDockerfile:
 
             """
         )
+
+    @property
+    def is_multistage(self):
+        return self._parser.is_multistage()
 
     @property
     def parent_images(self):

@@ -10,7 +10,7 @@ cur_dir = os.path.dirname(os.path.abspath(__file__))
 def test_dockerfile(exe_dockerfile):
     assert exe_dockerfile.baseimage == 'jinaai/jina:master'
     assert exe_dockerfile.entrypoint is None
-    
+
 
 def test_entrypoint(exe_dockerfile):
     exe_dockerfile.entrypoint = ['jina', 'pod']
@@ -37,8 +37,11 @@ def test_load_dockerfile():
     assert len(parser.parent_images) == 1
     assert parser.baseimage == 'jinaai/jina:2.0'
     assert parser.entrypoint == '["jina", "executor", "--uses", "config.yml"]'
-    assert parser.lines[-1].strip() == 'ENTRYPOINT ["jina", "executor", "--uses", "config.yml"]'
-    
+    assert (
+        parser.lines[-1].strip()
+        == 'ENTRYPOINT ["jina", "executor", "--uses", "config.yml"]'
+    )
+
     parser.entrypoint = ['jina', 'pod', '--uses']
     assert parser.entrypoint == '["jina", "pod", "--uses"]'
     assert parser.lines[-1].strip() == 'ENTRYPOINT ["jina", "pod", "--uses"]'

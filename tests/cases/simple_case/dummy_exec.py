@@ -12,12 +12,15 @@ class DummyExecutor(Executor):
 
 
 class Dummy2Executor(jina.Executor):
+    import tensorflow as tf
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
     @requests
     def foo(self):
         print(f'jina version: {jina.__version__}')
+        print(f'tensorflow version: {tf.__version__}')
 
 
 class Dummy3Executor(Executor):

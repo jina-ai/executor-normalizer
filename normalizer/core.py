@@ -1,5 +1,7 @@
 import ast
+from logging import log
 import pathlib
+from platform import version
 from typing import Dict, List
 from loguru import logger
 from jina.helper import colored, get_readable_size
@@ -26,7 +28,9 @@ from .helper import (
     resolve_import,
     topological_sort,
     choose_jina_version,
+    get_jina_image_tag,
 )
+from normalizer import docker
 
 
 def order_py_modules(py_modules: List['pathlib.Path'], work_path: 'pathlib.Path'):
@@ -102,7 +106,8 @@ def prelude(imports: List['Package']):
     dep_tools = set([])
     base_images = set([])
     for pkg in imports:
-        dep_tools.add(get_dep_tools(pkg))
+        for tool in get_dep_tools(pkg):
+            dep_tools.add(tool)
         _base_image = get_baseimage(pkg)
         if _base_image:
             base_images.add(_base_image)
@@ -111,7 +116,7 @@ def prelude(imports: List['Package']):
 
 def normalize(
     work_path: 'pathlib.Path',
-    meta: Dict = {'jina': 'master'},
+    meta: Dict = {'jina': '2.0.0'},
     env: Dict = {},
     **kwargs,
 ) -> None:
@@ -200,34 +205,75 @@ def normalize(
             f.write(config_content)
 
     if requirements_path.exists():
-        imports = parse_requirements(requirements_path)
+        imports = [
+            Package(name=p['name'], version=p['version'])
+            for p in parse_requirements(requirements_path)
+        ]
         logger.debug(f'=> existed imports: {imports}')
     else:
-        candidates = get_all_imports(work_path)
-        candidates = get_pkg_names(candidates)
+        imports = []
+        # WIP: TODO....
+        # candidates = get_all_imports(work_path)
+        # candidates = get_pkg_names(candidates)
 
-        logger.debug(f'=> inspect imports: {candidates}')
+        # logger.debug(f'=> inspect imports: {candidates}')
 
-        imports = [get_import_info(m) for m in candidates]
-        logger.debug(f'=> import pypi package : {imports}')
-        logger.debug(f'=> writing {len(imports)} requirements.txt')
+        # imports = [get_import_info(m) for m in candidates]
+        # logger.debug(f'=> import pypi package : {imports}')
+        # logger.debug(f'=> writing {len(imports)} requirements.txt')
 
-        if len(imports) > 0:
-            dump_requirements(requirements_path, imports)
+        # if len(imports) > 0:
+        #     dump_requirements(requirements_path, imports)
 
     base_images, dep_tools = prelude(imports)
+    jina_version = choose_jina_version(meta['jina'])
+    py_version = meta.get('python', '3.7.0')
 
-    if not dockerfile_path.exists():
+    jina_image_tag = get_jina_image_tag(jina_version, py_version)
 
+    logger.debug(
+        f'=> collected env:\n'
+        + f'\tapt installs: {dep_tools}\n'
+        + f'\tbase_images: {base_images}\n'
+        + f'\tjina_base_image: {jina_image_tag}'
+    )
+
+    if dockerfile_path.exists():
+        return
         dockerfile = ExecutorDockerfile(
-            build_args={'JINA_VERSION': choose_jina_version(meta['jina'])}
+            docker_file=dockerfile_path,
+            build_args={'JINA_VERSION': f'{jina_version}-{py_tag}'},
         )
 
-        # if len(test_glob) > 0:
-        #     dockerfile.add_unitest()
+        if dockerfile.is_multistage():
+            # Don't support multi-stage Dockerfie Optimization
+            return
+
+        if dockerfile.baseimage.startswith('jinaai/jina') and len(base_images) > 0:
+            dockerfile.baseimage = base_images.pop()
+            dockerfile._parser.add_lines(
+                f'RUN pip install jina=={jina_version}', at_start=True
+            )
+            dockerfile.dump(work_path / 'Dockerfile.normed')
+    else:
+        logger.debug('=> generating Dockerfile ...')
+        dockerfile = ExecutorDockerfile(build_args={'JINA_VERSION': jina_image_tag})
+
+        # if len(base_images) > 0:
+        #     logger.debug(f'=> use base image: {base_images}')
+        #     dockerfile.baseimage = base_images.pop()
+
+        dockerfile.add_work_dir()
+        # dockerfile._parser.add_lines(f'RUN pip install jina=={jina_version}')
+
+        if len(dep_tools) > 0:
+            dockerfile.add_apt_installs(dep_tools)
 
         if requirements_path.exists():
             dockerfile.add_pip_install()
+
+        # if len(test_glob) > 0:
+        #     dockerfile.add_unitest()
 
         dockerfile.entrypoint = [
             'jina',
