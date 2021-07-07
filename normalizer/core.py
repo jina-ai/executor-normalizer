@@ -147,6 +147,7 @@ def normalize(
     config_path = work_path / 'config.yml'
     readme_path = work_path / 'README.md'
     requirements_path = work_path / 'requirements.txt'
+    freeze_path = work_path / 'requirements.lock'
 
     py_glob = list(work_path.glob('*.py'))
     test_glob = list(work_path.glob('tests/test_*.py'))
@@ -157,6 +158,7 @@ def normalize(
         'config.yml': config_path,
         'README.md': readme_path,
         'requirements.txt': requirements_path,
+        'requirements.lock': freeze_path,
         '*.py': py_glob,
         'tests': test_glob,
     }
@@ -204,26 +206,32 @@ def normalize(
         with open(config_path, 'w') as f:
             f.write(config_content)
 
+    imports = []
     if requirements_path.exists():
         imports = [
             Package(name=p['name'], version=p['version'])
             for p in parse_requirements(requirements_path)
         ]
-        logger.debug(f'=> existed imports: {imports}')
-    else:
-        imports = []
-        # WIP: TODO....
-        # candidates = get_all_imports(work_path)
-        # candidates = get_pkg_names(candidates)
+        logger.debug(f'=> include {len(imports)} deps in requirements')
+    elif freeze_path.exists():
+        local_packages = {
+            p['name']: p['version'] for p in parse_requirements(freeze_path)
+        }
+        candidates = get_all_imports(work_path)
+        candidates = get_pkg_names(candidates)
 
-        # logger.debug(f'=> inspect imports: {candidates}')
+        logger.debug(f'=> inspected dependents: {candidates}')
 
-        # imports = [get_import_info(m) for m in candidates]
-        # logger.debug(f'=> import pypi package : {imports}')
-        # logger.debug(f'=> writing {len(imports)} requirements.txt')
+        imports = [get_import_info(m) for m in candidates]
+        logger.debug(f'=> get latest pypi packages : {imports}')
 
-        # if len(imports) > 0:
-        #     dump_requirements(requirements_path, imports)
+        for m in imports:
+            local_version = local_packages.get(m.name, None)
+            if local_version:
+                m._replace(version=local_version)
+        if len(imports) > 0:
+            logger.debug(f'=> dump {len(imports)} deps into requirements.txt')
+            dump_requirements(requirements_path, imports)
 
     base_images, dep_tools = prelude(imports)
     jina_version = choose_jina_version(meta['jina'])

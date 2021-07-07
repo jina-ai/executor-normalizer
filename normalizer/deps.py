@@ -90,7 +90,7 @@ def dump_requirements(path: 'Path', imports: List[Dict] = []):
 
         for m in imports:
             if m.version:
-                f.write(f'{m.name}=={m.version}\n')
+                f.write(f'{m.name}~={m.version}\n')
             else:
                 f.write(f'{m.name}\n')
 
