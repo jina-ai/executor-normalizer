@@ -32,8 +32,6 @@ class ExecutorDockerfile:
 
                 FROM jinaai/jina:{0}
 
-                ARG JINA_VERSION
-
                 """
             )
 
@@ -78,7 +76,7 @@ class ExecutorDockerfile:
         self._parser.content += dedent(
             """\
             # install the third-party requirements
-            RUN pip install -r requirements.txt
+            RUN pip install --default-timeout=1000 --compile -r requirements.txt
 
             """
         )
