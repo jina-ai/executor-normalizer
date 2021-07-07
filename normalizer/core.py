@@ -29,7 +29,7 @@ from .helper import (
     topological_sort,
     choose_jina_version,
     get_jina_image_tag,
-    is_empty
+    is_empty,
 )
 from normalizer import docker
 
