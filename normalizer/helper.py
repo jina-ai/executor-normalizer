@@ -6,6 +6,16 @@ from importlab.import_finder import get_imports
 from importlab.resolve import convert_to_path
 from . import __resources_path__
 
+def is_empty(file_path: 'pathlib.Path'):
+    if not file_path.exists(): return True
+
+    if file_path.stat().st_size == 0: return True
+
+    with file_path.open('r') as f:
+        for line in f:
+            if len(line.strip()) > 0:
+                return False
+    return False
 
 def load_manifest(yaml_path: 'pathlib.Path') -> Dict:
     """Load manifest of executor from YAML file."""

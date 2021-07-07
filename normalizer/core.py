@@ -29,6 +29,7 @@ from .helper import (
     topological_sort,
     choose_jina_version,
     get_jina_image_tag,
+    is_empty
 )
 from normalizer import docker
 
@@ -246,33 +247,28 @@ def normalize(
         + f'\tjina_base_image: {jina_image_tag}'
     )
 
-    if dockerfile_path.exists():
+    if not is_empty(dockerfile_path):
         return
-        dockerfile = ExecutorDockerfile(
-            docker_file=dockerfile_path,
-            build_args={'JINA_VERSION': f'{jina_version}-{py_tag}'},
-        )
 
-        if dockerfile.is_multistage():
-            # Don't support multi-stage Dockerfie Optimization
-            return
-
-        if dockerfile.baseimage.startswith('jinaai/jina') and len(base_images) > 0:
-            dockerfile.baseimage = base_images.pop()
-            dockerfile._parser.add_lines(
-                f'RUN pip install jina=={jina_version}', at_start=True
-            )
-            dockerfile.dump(work_path / 'Dockerfile.normed')
+        # WIP: optimizing the Dockerfile from uploader
+        # if dockerfile.is_multistage():
+        #     # Don't support multi-stage Dockerfie Optimization
+        #     return
+        # dockerfile = ExecutorDockerfile(
+        #     docker_file=dockerfile_path,
+        #     build_args={'JINA_VERSION': f'{jina_version}-{py_tag}'},
+        # )
+        # if dockerfile.baseimage.startswith('jinaai/jina') and len(base_images) > 0:
+        #     dockerfile.baseimage = base_images.pop()
+        #     dockerfile._parser.add_lines(
+        #         f'RUN pip install jina=={jina_version}', at_start=True
+        #     )
+        #     dockerfile.dump(work_path / 'Dockerfile.normed')
     else:
         logger.debug('=> generating Dockerfile ...')
         dockerfile = ExecutorDockerfile(build_args={'JINA_VERSION': jina_image_tag})
 
-        # if len(base_images) > 0:
-        #     logger.debug(f'=> use base image: {base_images}')
-        #     dockerfile.baseimage = base_images.pop()
-
         dockerfile.add_work_dir()
-        # dockerfile._parser.add_lines(f'RUN pip install jina=={jina_version}')
 
         if len(dep_tools) > 0:
             dockerfile.add_apt_installs(dep_tools)
