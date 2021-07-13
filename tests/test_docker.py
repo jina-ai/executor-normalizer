@@ -8,7 +8,7 @@ cur_dir = os.path.dirname(os.path.abspath(__file__))
 
 
 def test_dockerfile(exe_dockerfile):
-    assert exe_dockerfile.baseimage == 'jinaai/jina:master'
+    assert exe_dockerfile.baseimage == 'jinaai/jina:master-perf'
     assert exe_dockerfile.entrypoint is None
 
 
@@ -23,19 +23,19 @@ def test_entrypoint(exe_dockerfile):
 
 
 def test_baseimage(exe_dockerfile):
-    assert exe_dockerfile.baseimage == 'jinaai/jina:master'
-    assert exe_dockerfile.lines[3] == 'FROM jinaai/jina:master\n'
+    assert exe_dockerfile.baseimage == 'jinaai/jina:master-perf'
+    assert exe_dockerfile.lines[3] == 'FROM jinaai/jina:master-perf\n'
 
-    exe_dockerfile.baseimage = 'jinaai/jina:latest'
-    assert exe_dockerfile.baseimage == 'jinaai/jina:latest'
-    assert exe_dockerfile.lines[3] == 'FROM jinaai/jina:latest\n'
+    exe_dockerfile.baseimage = 'jinaai/jina:latest-perf'
+    assert exe_dockerfile.baseimage == 'jinaai/jina:latest-perf'
+    assert exe_dockerfile.lines[3] == 'FROM jinaai/jina:latest-perf\n'
 
 
 def test_load_dockerfile():
     docker_file = Path(__file__).parent / 'docker_cases' / 'Dockerfile.case1'
     parser = ExecutorDockerfile(docker_file=docker_file)
     assert len(parser.parent_images) == 1
-    assert parser.baseimage == 'jinaai/jina:2.0'
+    assert parser.baseimage == 'jinaai/jina:2.0-perf'
     assert parser.entrypoint == '["jina", "executor", "--uses", "config.yml"]'
     assert (
         parser.lines[-1].strip()
