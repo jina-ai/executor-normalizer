@@ -17,9 +17,9 @@ def test_entrypoint(exe_dockerfile):
     assert exe_dockerfile.lines[-1].strip() == 'ENTRYPOINT ["jina", "pod"]'
     assert exe_dockerfile.entrypoint == '["jina", "pod"]'
 
-    exe_dockerfile.entrypoint = ['jina', 'pod', '--uses']
-    assert exe_dockerfile.entrypoint == '["jina", "pod", "--uses"]'
-    assert exe_dockerfile.lines[-1].strip() == 'ENTRYPOINT ["jina", "pod", "--uses"]'
+    exe_dockerfile.set_entrypoint('["jina", "pod", "--uses", "config.yml"]')
+    assert exe_dockerfile.entrypoint == '["jina", "pod", "--uses", "config.yml"]'
+    assert exe_dockerfile.lines[-1].strip() == 'ENTRYPOINT ["jina", "pod", "--uses", "config.yml"]'
 
 
 def test_baseimage(exe_dockerfile):

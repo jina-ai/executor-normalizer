@@ -5,6 +5,7 @@ from platform import version
 from typing import Dict, List
 from loguru import logger
 from jina.helper import colored, get_readable_size
+from . import __resources_path__
 from .deps import (
     Package,
     get_all_imports,
@@ -238,23 +239,23 @@ def normalize(
         + f'\tjina_base_image: {jina_image_tag}'
     )
 
+    dockerfile = None
     if dockerfile_path.exists():
-        return
         dockerfile = ExecutorDockerfile(
             docker_file=dockerfile_path,
-            build_args={'JINA_VERSION': f'{jina_version}-{py_tag}'},
+            build_args={'JINA_VERSION': f'{jina_version}'},
         )
 
-        if dockerfile.is_multistage():
-            # Don't support multi-stage Dockerfie Optimization
-            return
+        # if dockerfile.is_multistage():
+        #     # Don't support multi-stage Dockerfie Optimization
+        #     return
 
-        if dockerfile.baseimage.startswith('jinaai/jina') and len(base_images) > 0:
-            dockerfile.baseimage = base_images.pop()
-            dockerfile._parser.add_lines(
-                f'RUN pip install jina=={jina_version}', at_start=True
-            )
-            dockerfile.dump(work_path / 'Dockerfile.normed')
+        # if dockerfile.baseimage.startswith('jinaai/jina') and len(base_images) > 0:
+        #     dockerfile.baseimage = base_images.pop()
+        #     dockerfile._parser.add_lines(
+        #         f'RUN pip install jina=={jina_version}', at_start=True
+        #     )
+        #     dockerfile.dump(work_path / 'Dockerfile.normed')
     else:
         logger.debug('=> generating Dockerfile ...')
         dockerfile = ExecutorDockerfile(build_args={'JINA_VERSION': jina_image_tag})
@@ -283,3 +284,13 @@ def normalize(
         ]
 
         dockerfile.dump(dockerfile_path)
+
+    entrypoint_value = dockerfile.entrypoint
+
+    new_dockerfile = ExecutorDockerfile(
+        docker_file=__resources_path__ / 'templates' / 'dockerfile.base'
+    )
+    new_dockerfile.set_entrypoint(entrypoint_value)
+
+    new_dockerfile_path = work_path / '__jina__.Dockerfile'
+    new_dockerfile.dump(new_dockerfile_path)
