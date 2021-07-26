@@ -138,6 +138,23 @@ class ExecutorDockerfile:
         else:
             self._parser.add_lines(new_cmd)
 
+    def set_entrypoint(self, value: str):
+        """
+        setter for final 'entrypoint' instruction in final build stage
+        """
+        cmd = None
+        for insndesc in self._parser.structure:
+            if insndesc['instruction'] == 'FROM':  # new stage, reset
+                cmd = None
+            elif insndesc['instruction'].upper() == 'ENTRYPOINT':
+                cmd = insndesc
+
+        new_cmd = 'ENTRYPOINT ' + value
+        if cmd:
+            self._parser.add_lines_at(cmd, new_cmd, replace=True)
+        else:
+            self._parser.add_lines(new_cmd)
+
     # @property
     # def entrypoint(self):
     #     return self._entrypoint
