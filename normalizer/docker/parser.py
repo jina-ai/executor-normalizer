@@ -76,7 +76,8 @@ class ExecutorDockerfile:
         self._parser.content += dedent(
             """\
             # install the third-party requirements
-            RUN pip install --default-timeout=1000 --compile -r requirements.txt
+            RUN pip install --default-timeout=1000 --compile --no-cache-dir \\
+                 -r requirements.txt
 
             """
         )
