@@ -4,5 +4,8 @@ ARG BASE_IMAGE
 FROM ${BASE_IMAGE}
 
 ARG JINA_VERSION
-RUN JINA_PIP_INSTALL_PERF=1 pip install --upgrade jina==${JINA_VERSION}
+RUN JINA_PIP_INSTALL_PERF=1 pip install --no-cache-dir --upgrade jina==${JINA_VERSION}
+
+RUN groupadd -r jina && useradd -r -g jina jina
+USER jina
 
