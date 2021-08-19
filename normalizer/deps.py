@@ -19,28 +19,29 @@ def get_dep_tools(pkg: str):
 
 
 def get_baseimage(pkg: str) -> Tuple[str, str]:
-    base_image = None
-    version_tag = None
-    if pkg.name in ['tensorflow', 'tensorflow-cpu', 'tensorflow-gpu']:
-        base_image = 'tensorflow/tensorflow'
-        version_tag = pkg.version
-        if pkg.name == 'tensorflow-gpu':
-            version_tag += '-gpu'
-        if pkg.version <= '2.1.0':
-            version_tag += f'-py3'
-    elif pkg.name in ['pytorch', 'torch']:
-        if pkg.version.endswith('+cpu'):
-            base_image = 'bitnami/pytorch'
-            version_tag = pkg.version.split('+')[0]
-        else:
-            base_image = 'pytorch/pytorch'
-            version_tag = f'{pkg.version}-cuda10.2-cudnn7-runtime'
-    else:
-        # return None, None
-        return None
+    # base_image = None
+    # version_tag = None
+    # if pkg.name in ['tensorflow', 'tensorflow-cpu', 'tensorflow-gpu']:
+    #     base_image = 'tensorflow/tensorflow'
+    #     version_tag = pkg.version
+    #     if pkg.name == 'tensorflow-gpu':
+    #         version_tag += '-gpu'
+    #     if pkg.version and pkg.version <= '2.1.0':
+    #         version_tag += f'-py3'
+    # elif pkg.name in ['pytorch', 'torch']:
+    #     if pkg.version and pkg.version.endswith('+cpu'):
+    #         base_image = 'bitnami/pytorch'
+    #         version_tag = pkg.version.split('+')[0]
+    #     else:
+    #         base_image = 'pytorch/pytorch'
+    #         version_tag = f'{pkg.version}-cuda10.2-cudnn7-runtime'
+    # else:
+    #     # return None, None
+    #     return None
 
-    # return base_image, version_tag
-    return f'{base_image}:{version_tag}'
+    # # return base_image, version_tag
+    # return f'{base_image}:{version_tag}'
+    return None
 
 
 def get_all_imports(
