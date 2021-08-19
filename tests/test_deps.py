@@ -30,31 +30,31 @@ def test_get_dep_tools():
     assert deps.get_dep_tools(pkg) == ['git']
 
 
-@pytest.mark.parametrize(
-    'package, expect_base_image',
-    [
-        (
-            deps.Package(name='tensorflow', version='2.5.0'),
-            'tensorflow/tensorflow:2.5.0',
-        ),
-        (
-            deps.Package(name='tensorflow-cpu', version='2.1.0'),
-            'tensorflow/tensorflow:2.1.0-py3',
-        ),
-        (
-            deps.Package(name='tensorflow-gpu', version='2.1.0'),
-            'tensorflow/tensorflow:2.1.0-gpu-py3',
-        ),
-        (
-            deps.Package(name='tensorflow-gpu', version='1.12.0'),
-            'tensorflow/tensorflow:1.12.0-gpu-py3',
-        ),
-        (deps.Package(name='pytorch', version='1.8.0+cpu'), 'bitnami/pytorch:1.8.0'),
-        (
-            deps.Package(name='pytorch', version='1.8.0'),
-            'pytorch/pytorch:1.8.0-cuda10.2-cudnn7-runtime',
-        ),
-    ],
-)
-def test_get_base_images(package, expect_base_image):
-    assert deps.get_baseimage(package) == expect_base_image
+# @pytest.mark.parametrize(
+#     'package, expect_base_image',
+#     [
+#         (
+#             deps.Package(name='tensorflow', version='2.5.0'),
+#             'tensorflow/tensorflow:2.5.0',
+#         ),
+#         (
+#             deps.Package(name='tensorflow-cpu', version='2.1.0'),
+#             'tensorflow/tensorflow:2.1.0-py3',
+#         ),
+#         (
+#             deps.Package(name='tensorflow-gpu', version='2.1.0'),
+#             'tensorflow/tensorflow:2.1.0-gpu-py3',
+#         ),
+#         (
+#             deps.Package(name='tensorflow-gpu', version='1.12.0'),
+#             'tensorflow/tensorflow:1.12.0-gpu-py3',
+#         ),
+#         (deps.Package(name='pytorch', version='1.8.0+cpu'), 'bitnami/pytorch:1.8.0'),
+#         (
+#             deps.Package(name='pytorch', version='1.8.0'),
+#             'pytorch/pytorch:1.8.0-cuda10.2-cudnn7-runtime',
+#         ),
+#     ],
+# )
+# def test_get_base_images(package, expect_base_image):
+#     assert deps.get_baseimage(package) == expect_base_image
