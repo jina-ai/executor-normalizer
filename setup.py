@@ -35,6 +35,7 @@ setup(
     ),
     version=__version__,
     include_package_data=True,
+    package_data={'normalizer': ['resources/*']},
     author='felix.wang',
     author_email='felix.wang@jina.ai',
     description='Jina executor docker image normalizer',
