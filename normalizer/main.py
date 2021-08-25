@@ -9,7 +9,7 @@ from .core import normalize
 
 @click.command()
 @click.argument('path', default='.')
-@click.option('--jina-version', default='2.0.0', help='Specify the jina version.')
+@click.option('--jina-version', default='2', help='Specify the jina version.')
 @click.option('--verbose', '-v', is_flag=True, help='Enables verbose mode.')
 @click.version_option(
     f'{__normalizer_version__} (Jina=v{__iina_version__})',

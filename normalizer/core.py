@@ -117,7 +117,7 @@ def prelude(imports: List['Package']):
 
 def normalize(
     work_path: 'pathlib.Path',
-    meta: Dict = {'jina': '2.0.0'},
+    meta: Dict = {'jina': '2'},
     env: Dict = {},
     **kwargs,
 ) -> None:
