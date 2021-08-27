@@ -45,11 +45,13 @@ setup(
     install_requires=base_dep,
     setup_requires=[
         'setuptools>=18.0',
+    ],
+    tests_require=[
+        'pytest',
         'pytest-runner',
         'black==20.8b1',
-        'isort==4.3.21',
+        'isort==4.3.21',    
     ],
-    tests_require=['pytest'],
     python_requires='>=3.6',
     entry_points={'console_scripts': ['normalizer=normalizer.main:cli']},
     classifiers=[
