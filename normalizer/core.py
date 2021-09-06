@@ -2,7 +2,7 @@ import ast
 from logging import log
 import pathlib
 from platform import version
-from typing import Dict, List
+from typing import Dict, List, Tuple
 from loguru import logger
 from jina.helper import colored, get_readable_size
 from . import __resources_path__
@@ -63,15 +63,15 @@ def inspect_executors(py_modules: List['pathlib.Path']):
             tree = ast.parse(fin.read(), filename=str(filepath))
 
             for class_def in _inspect_class_defs(tree):
-                base_name = None
+                base_names = []
                 for base_class in class_def.bases:
                     # if the class looks like class MyExecutor(Executor)
                     if isinstance(base_class, ast.Name):
-                        base_name = base_class.id
+                        base_names.append(base_class.id)
                     # if the class looks like class MyExecutor(jina.Executor):
                     if isinstance(base_class, ast.Attribute):
-                        base_name = base_class.attr
-                if base_name != 'Executor':
+                        base_names.append(base_class.attr)
+                if 'Executor' not in base_names:
                     continue
 
                 has_init_func = False
@@ -98,7 +98,7 @@ def inspect_executors(py_modules: List['pathlib.Path']):
 def filter_executors(executors):
     result = []
     for i, (executor, func_args, func_args_defaults, _) in enumerate(executors):
-        if len(func_args) - len(func_args_defaults) == 1:
+        if len(func_args) - len(func_args_defaults) >= 1:
             result.append(executors[i])
     return result
 
@@ -120,7 +120,7 @@ def normalize(
     meta: Dict = {'jina': '2'},
     env: Dict = {},
     **kwargs,
-) -> None:
+) -> Tuple[str, str, str, str]:
     """Normalize the executor package.
 
     :param work_path: the executor folder where it located
@@ -177,20 +177,20 @@ def normalize(
     # manifest = load_manifest(manifest_path)
 
     executor = None
+    # inspect executor
+    executors = inspect_executors(py_glob)
+    if len(executors) == 0:
+        raise ExecutorNotFoundError
+    if len(executors) > 1:
+        raise ExecutorExistsError
+
+    executors = filter_executors(executors)
+    if len(executors) == 0:
+        raise IllegalExecutorError
+
+    executor, func_args, func_args_defaults, filepath = executors[0]
 
     if not config_path.exists():
-        # inspect executor
-        executors = inspect_executors(py_glob)
-        if len(executors) == 0:
-            raise ExecutorNotFoundError
-        if len(executors) > 1:
-            raise ExecutorExistsError
-
-        executors = filter_executors(executors)
-        if len(executors) == 0:
-            raise IllegalExecutorError
-
-        executor, *_ = executors[0]
         try:
             py_moduels = order_py_modules(py_glob, work_path)
         except Exception as ex:
@@ -294,3 +294,5 @@ def normalize(
 
     new_dockerfile_path = work_path / '__jina__.Dockerfile'
     new_dockerfile.dump(new_dockerfile_path)
+
+    return executor, func_args, func_args_defaults, filepath

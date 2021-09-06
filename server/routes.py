@@ -23,17 +23,24 @@ class PackagePayload(BaseModel):
     env: Optional[Dict] = {}
 
 
+class ExecutorData(BaseModel):
+    executor: str
+    func_args: Any
+    func_args_defaults: Any
+    filepath: str
+
+
 class NormalizeResult(BaseModel):
     success: bool
     code: int
-    data: Any
+    data: Optional[ExecutorData]
     message: str
 
 
-@router.post('/', name='normalizer')
+@router.post('/', name='normalizer', response_model=NormalizeResult)
 def normalize(
-    request: Request,
-    block_data: PackagePayload = None,
+        request: Request,
+        block_data: PackagePayload = None,
 ):
     now = datetime.datetime.now()
 
@@ -45,11 +52,17 @@ def normalize(
     }
 
     try:
-        _normalize(
+        executor, func_args, func_args_defaults, filepath = _normalize(
             block_data.package_path,
             meta=block_data.meta,
             env=block_data.env,
         )
+        result['data'] = {
+            'executor': executor,
+            'func_args': func_args,
+            'func_args_defaults': func_args_defaults,
+            'filepath': str(filepath)
+        }
     except Exception as ex:
         result['success'] = False
         if isinstance(ex, excepts.ExecutorNotFoundError):
@@ -85,6 +98,6 @@ def normalize(
     return NormalizeResult(
         success=result['success'],
         code=result['code'],
-        data=result['data'],
+        data=ExecutorData(**result['data']) if result['data'] else None,
         message=result['message'],
     )
