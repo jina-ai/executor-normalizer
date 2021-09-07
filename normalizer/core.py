@@ -1,8 +1,12 @@
 import ast
+import re
 from logging import log
 import pathlib
+from operator import itemgetter
 from platform import version
 from typing import Dict, List, Tuple
+
+import numpy as np
 from loguru import logger
 from jina.helper import colored, get_readable_size
 from . import __resources_path__
@@ -53,6 +57,21 @@ def order_py_modules(py_modules: List['pathlib.Path'], work_path: 'pathlib.Path'
     return orders
 
 
+def _get_element_source(
+    lines: List[str],
+    element: ast.expr
+):
+    if element.lineno == element.end_lineno:
+        annotation = lines[element.lineno - 1][element.col_offset:element.end_col_offset]
+    else:
+        annotation = lines[element.lineno - 1][element.col_offset:] + \
+                     ''.join(lines[element.lineno:element.end_lineno - 1]) + \
+                     lines[element.end_lineno - 1][:element.end_col_offset]
+    annotation = re.sub(r'\s+', '', annotation)
+    annotation = annotation.replace(',', ', ')
+    return annotation
+
+
 def inspect_executors(py_modules: List['pathlib.Path']):
     def _inspect_class_defs(tree):
         return [o for o in ast.walk(tree) if isinstance(o, ast.ClassDef)]
@@ -61,6 +80,8 @@ def inspect_executors(py_modules: List['pathlib.Path']):
     for filepath in py_modules:
         with filepath.open() as fin:
             tree = ast.parse(fin.read(), filename=str(filepath))
+            fin.seek(0)
+            lines = fin.readlines()
 
             for class_def in _inspect_class_defs(tree):
                 base_names = []
@@ -83,21 +104,33 @@ def inspect_executors(py_modules: List['pathlib.Path']):
                     ):
                         has_init_func = True
 
-                        func_args = body_item.args.args
-                        func_args_defaults = body_item.args.defaults
+                        func_args = [element.arg for element in body_item.args.args]
+                        annotations = [
+                            _get_element_source(
+                                lines,
+                                element.annotation
+                            ) if element.annotation else None
+                            for element in body_item.args.args
+                        ]
+                        func_args_defaults = [
+                            _get_element_source(
+                                lines,
+                                element
+                            ) if element else None
+                            for element in body_item.args.defaults]
 
                         executors.append(
-                            (class_def.name, func_args, func_args_defaults, filepath)
+                            (class_def.name, func_args, func_args_defaults, annotations, filepath)
                         )
                 if not has_init_func:
-                    executors.append((class_def.name, ['self'], [], filepath))
+                    executors.append((class_def.name, ['self'], [], [], filepath))
 
     return executors
 
 
 def filter_executors(executors):
     result = []
-    for i, (executor, func_args, func_args_defaults, _) in enumerate(executors):
+    for i, (executor, func_args, func_args_defaults, _, _) in enumerate(executors):
         if len(func_args) - len(func_args_defaults) >= 1:
             result.append(executors[i])
     return result
@@ -120,7 +153,7 @@ def normalize(
     meta: Dict = {'jina': '2'},
     env: Dict = {},
     **kwargs,
-) -> Tuple[str, str, str, str]:
+) -> Tuple[str, str, str, str, str]:
     """Normalize the executor package.
 
     :param work_path: the executor folder where it located
@@ -188,7 +221,7 @@ def normalize(
     if len(executors) == 0:
         raise IllegalExecutorError
 
-    executor, func_args, func_args_defaults, filepath = executors[0]
+    executor, func_args, func_args_defaults, annotations, filepath = executors[0]
 
     if not config_path.exists():
         try:
@@ -295,4 +328,4 @@ def normalize(
     new_dockerfile_path = work_path / '__jina__.Dockerfile'
     new_dockerfile.dump(new_dockerfile_path)
 
-    return executor, func_args, func_args_defaults, filepath
+    return executor, func_args, func_args_defaults, annotations, filepath

@@ -1,7 +1,7 @@
 import traceback
 import sys
 import datetime
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 from pathlib import Path
 from fastapi import APIRouter
 from fastapi.encoders import jsonable_encoder
@@ -26,7 +26,8 @@ class PackagePayload(BaseModel):
 class ExecutorData(BaseModel):
     executor: str
     func_args: Any
-    func_args_defaults: Any
+    func_args_defaults: List[str]
+    annotations: List[Optional[str]]
     filepath: str
 
 
@@ -52,7 +53,7 @@ def normalize(
     }
 
     try:
-        executor, func_args, func_args_defaults, filepath = _normalize(
+        executor, func_args, func_args_defaults, annotations, filepath = _normalize(
             block_data.package_path,
             meta=block_data.meta,
             env=block_data.env,
@@ -61,6 +62,7 @@ def normalize(
             'executor': executor,
             'func_args': func_args,
             'func_args_defaults': func_args_defaults,
+            'annotations': annotations,
             'filepath': str(filepath)
         }
     except Exception as ex:
