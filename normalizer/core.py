@@ -4,7 +4,7 @@ from logging import log
 import pathlib
 from operator import itemgetter
 from platform import version
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Optional
 
 import numpy as np
 from loguru import logger
@@ -37,6 +37,9 @@ from .helper import (
 )
 from normalizer import docker
 
+ArgType = List[Tuple[str, Optional[str]]]
+KWArgType = List[Tuple[str, Optional[str], str]]
+
 
 def order_py_modules(py_modules: List['pathlib.Path'], work_path: 'pathlib.Path'):
 
@@ -58,9 +61,8 @@ def order_py_modules(py_modules: List['pathlib.Path'], work_path: 'pathlib.Path'
 
 
 def _get_element_source(
-    lines: List[str],
-    element: ast.expr
-):
+        lines: List[str],
+        element: ast.expr) -> str:
     if element.lineno == element.end_lineno:
         annotation = lines[element.lineno - 1][element.col_offset:element.end_col_offset]
     else:
@@ -70,6 +72,27 @@ def _get_element_source(
     annotation = re.sub(r'\s+', '', annotation)
     annotation = annotation.replace(',', ', ')
     return annotation
+
+
+def _get_args_kwargs(
+        func_args: List[str],
+        func_args_defaults: List[str],
+        annotations: List[Optional[str]]) -> Tuple[ArgType, KWArgType]:
+    kwarg_arguments, kwargs_annotations, kwargs_defaults = func_args[-len(func_args_defaults):],\
+                                                           annotations[-len(func_args_defaults):],\
+                                                           func_args_defaults
+
+    kwargs = [
+        (arg, annotation, default)
+        for arg, annotation, default in zip(kwarg_arguments, kwargs_annotations, kwargs_defaults)
+    ]
+
+    arg_arguments, args_annotations = func_args[:-len(func_args_defaults)], annotations[:-len(func_args_defaults)]
+    args = [
+        (arg, annotation)
+        for arg, annotation in zip(arg_arguments, args_annotations)
+    ]
+    return args, kwargs
 
 
 def inspect_executors(py_modules: List['pathlib.Path']):
@@ -153,7 +176,7 @@ def normalize(
     meta: Dict = {'jina': '2'},
     env: Dict = {},
     **kwargs,
-) -> Tuple[str, str, str, str, str]:
+) -> Tuple[str, ArgType, KWArgType, str]:
     """Normalize the executor package.
 
     :param work_path: the executor folder where it located
@@ -222,6 +245,8 @@ def normalize(
         raise IllegalExecutorError
 
     executor, func_args, func_args_defaults, annotations, filepath = executors[0]
+
+    init_args, init_kwargs = _get_args_kwargs(func_args, func_args_defaults, annotations)
 
     if not config_path.exists():
         try:
@@ -328,4 +353,4 @@ def normalize(
     new_dockerfile_path = work_path / '__jina__.Dockerfile'
     new_dockerfile.dump(new_dockerfile_path)
 
-    return executor, func_args, func_args_defaults, annotations, filepath
+    return executor, init_args, init_kwargs, filepath

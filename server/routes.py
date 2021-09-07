@@ -23,18 +23,30 @@ class PackagePayload(BaseModel):
     env: Optional[Dict] = {}
 
 
-class ExecutorData(BaseModel):
+class Arg(BaseModel):
+    arg: str
+    annotation: Optional[str]
+
+
+class KWArg(Arg):
+    default: str
+
+
+class FuncArgs(BaseModel):
+    args: List[Arg]
+    kwargs: List[KWArg]
+
+
+class Executor(BaseModel):
     executor: str
-    func_args: Any
-    func_args_defaults: List[str]
-    annotations: List[Optional[str]]
+    init: FuncArgs
     filepath: str
 
 
 class NormalizeResult(BaseModel):
     success: bool
     code: int
-    data: Optional[ExecutorData]
+    data: Optional[Executor]
     message: str
 
 
@@ -53,16 +65,30 @@ def normalize(
     }
 
     try:
-        executor, func_args, func_args_defaults, annotations, filepath = _normalize(
+        executor, args, kwargs, filepath = _normalize(
             block_data.package_path,
             meta=block_data.meta,
             env=block_data.env,
         )
         result['data'] = {
             'executor': executor,
-            'func_args': func_args,
-            'func_args_defaults': func_args_defaults,
-            'annotations': annotations,
+            'init': {
+                'args': [
+                    {
+                        'arg': arg,
+                        'annotation': annotation
+                    }
+                    for arg, annotation in args
+                ],
+                'kwargs': [
+                    {
+                        'arg': arg,
+                        'annotation': annotation,
+                        'default': default
+                    }
+                    for arg, annotation, default in kwargs
+                ],
+            },
             'filepath': str(filepath)
         }
     except Exception as ex:
@@ -100,6 +126,6 @@ def normalize(
     return NormalizeResult(
         success=result['success'],
         code=result['code'],
-        data=ExecutorData(**result['data']) if result['data'] else None,
+        data=Executor(**result['data']) if result['data'] else None,
         message=result['message'],
     )
