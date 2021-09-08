@@ -158,9 +158,14 @@ def inspect_executors(py_modules: List['pathlib.Path']) -> List[Tuple[
 
 def filter_executors(executors: List[Tuple[str, str, Tuple, List[Tuple]]]):
     result = []
-    for i, (executor, _, (func_args, func_args_defaults, _, _), _) in enumerate(executors):
-        if len(func_args) - len(func_args_defaults) >= 1:
+    for i, (executor, _, init, _) in enumerate(executors):
+        # An Executor without __init__ should be valid
+        if not init:
             result.append(executors[i])
+        else:
+            func_args, func_args_defaults, _, _ = init
+            if len(func_args) - len(func_args_defaults) >= 1:
+                result.append(executors[i])
     return result
 
 

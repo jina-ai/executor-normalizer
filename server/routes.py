@@ -40,7 +40,7 @@ class FuncArgs(BaseModel):
 
 class Executor(BaseModel):
     executor: str
-    init: FuncArgs
+    init: Optional[FuncArgs]
     endpoints: List[FuncArgs]
     filepath: str
 
@@ -72,10 +72,9 @@ def normalize(
             meta=block_data.meta,
             env=block_data.env,
         )
-        init_args, init_kwargs, init_docstring = init
-        result['data'] = {
-            'executor': executor,
-            'init': {
+        if init:
+            init_args, init_kwargs, init_docstring = init
+            init = {
                 'args': [
                     {
                         'arg': arg,
@@ -92,7 +91,10 @@ def normalize(
                     for arg, annotation, default in init_kwargs
                 ],
                 'docstring': init_docstring
-            },
+            }
+        result['data'] = {
+            'executor': executor,
+            'init': init,
             'endpoints': [
                 {
                     'args': [
