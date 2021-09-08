@@ -40,7 +40,8 @@ from normalizer import docker
 ArgType = List[Tuple[str, Optional[str]]]
 KWArgType = List[Tuple[str, Optional[str], str]]
 
-FuncInspectionType = Tuple[ArgType, KWArgType, str]
+InitInspectionType = Tuple[ArgType, KWArgType, str]
+EndpointInspectionType = Tuple[str, ArgType, KWArgType, str]
 
 
 def order_py_modules(py_modules: List['pathlib.Path'], work_path: 'pathlib.Path'):
@@ -144,13 +145,10 @@ def inspect_executors(py_modules: List['pathlib.Path']) -> List[Tuple[
                         for element in body_item.args.defaults]
 
                     # check __init__ function arguments
-                    if (
-                        isinstance(body_item, ast.FunctionDef)
-                        and body_item.name == '__init__'
-                    ):
+                    if body_item.name == '__init__':
                         init = (func_args, func_args_defaults, annotations, docstring)
                     else:
-                        endpoints.append((func_args, func_args_defaults, annotations, docstring))
+                        endpoints.append((body_item.name, func_args, func_args_defaults, annotations, docstring))
                 executors.append((class_def.name, filepath, init, endpoints))
     return executors
 
@@ -186,7 +184,7 @@ def normalize(
     meta: Dict = {'jina': '2'},
     env: Dict = {},
     **kwargs,
-) -> Tuple[str, FuncInspectionType, List[FuncInspectionType], str]:
+) -> Tuple[str, InitInspectionType, List[EndpointInspectionType], str]:
     """Normalize the executor package.
 
     :param work_path: the executor folder where it located
@@ -262,13 +260,13 @@ def normalize(
 
     for i, endpoint in enumerate(endpoints):
         if endpoint is not None:
-            endpoint_args, endpoint_args_defaults, endpoint_annotations, endpoint_docstring = endpoint
+            endpoint_name, endpoint_args, endpoint_args_defaults, endpoint_annotations, endpoint_docstring = endpoint
             endpoint_args, endpoint_kwargs = _get_args_kwargs(
                 endpoint_args,
                 endpoint_args_defaults,
                 endpoint_annotations
             )
-            endpoints[i] = (endpoint_args, endpoint_kwargs, endpoint_docstring)
+            endpoints[i] = (endpoint_name, endpoint_args, endpoint_kwargs, endpoint_docstring)
 
     if not config_path.exists():
         try:

@@ -38,10 +38,17 @@ class FuncArgs(BaseModel):
     docstring: Optional[str]
 
 
+class EndpointArgs(BaseModel):
+    name: str
+    args: List[Arg]
+    kwargs: List[KWArg]
+    docstring: Optional[str]
+
+
 class Executor(BaseModel):
     executor: str
     init: Optional[FuncArgs]
-    endpoints: List[FuncArgs]
+    endpoints: List[EndpointArgs]
     filepath: str
 
 
@@ -97,6 +104,7 @@ def normalize(
             'init': init,
             'endpoints': [
                 {
+                    'name': endpoint_name,
                     'args': [
                         {
                             'arg': arg,
@@ -114,7 +122,7 @@ def normalize(
                     ],
                     'docstring': endpoint_docstring
                 }
-                for endpoint_args, endpoint_kwargs, endpoint_docstring in endpoints
+                for endpoint_name, endpoint_args, endpoint_kwargs, endpoint_docstring in endpoints
             ],
             'filepath': str(filepath)
         }
