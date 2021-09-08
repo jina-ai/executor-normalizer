@@ -81,8 +81,12 @@ def _get_args_kwargs(
         func_args: List[str],
         func_args_defaults: List[str],
         annotations: List[Optional[str]]) -> Tuple[ArgType, KWArgType]:
-    kwarg_arguments, kwargs_annotations, kwargs_defaults = func_args[-len(func_args_defaults):],\
-                                                           annotations[-len(func_args_defaults):],\
+    if len(func_args_defaults) == 0:
+        kwargs_idx = len(func_args)
+    else:
+        kwargs_idx = -len(func_args_defaults)
+    kwarg_arguments, kwargs_annotations, kwargs_defaults = func_args[kwargs_idx:],\
+                                                           annotations[kwargs_idx:],\
                                                            func_args_defaults
 
     kwargs = [
@@ -90,7 +94,7 @@ def _get_args_kwargs(
         for arg, annotation, default in zip(kwarg_arguments, kwargs_annotations, kwargs_defaults)
     ]
 
-    arg_arguments, args_annotations = func_args[:-len(func_args_defaults)], annotations[:-len(func_args_defaults)]
+    arg_arguments, args_annotations = func_args[:kwargs_idx], annotations[:kwargs_idx]
     args = [
         (arg, annotation)
         for arg, annotation in zip(arg_arguments, args_annotations)
