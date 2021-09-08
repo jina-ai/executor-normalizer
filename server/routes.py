@@ -35,11 +35,13 @@ class KWArg(Arg):
 class FuncArgs(BaseModel):
     args: List[Arg]
     kwargs: List[KWArg]
+    docstring: Optional[str]
 
 
 class Executor(BaseModel):
     executor: str
     init: FuncArgs
+    endpoints: List[FuncArgs]
     filepath: str
 
 
@@ -65,11 +67,12 @@ def normalize(
     }
 
     try:
-        executor, args, kwargs, filepath = _normalize(
+        executor, init, endpoints, filepath = _normalize(
             block_data.package_path,
             meta=block_data.meta,
             env=block_data.env,
         )
+        init_args, init_kwargs, init_docstring = init
         result['data'] = {
             'executor': executor,
             'init': {
@@ -78,7 +81,7 @@ def normalize(
                         'arg': arg,
                         'annotation': annotation
                     }
-                    for arg, annotation in args
+                    for arg, annotation in init_args
                 ],
                 'kwargs': [
                     {
@@ -86,9 +89,31 @@ def normalize(
                         'annotation': annotation,
                         'default': default
                     }
-                    for arg, annotation, default in kwargs
+                    for arg, annotation, default in init_kwargs
                 ],
+                'docstring': init_docstring
             },
+            'endpoints': [
+                {
+                    'args': [
+                        {
+                            'arg': arg,
+                            'annotation': annotation
+                        }
+                        for arg, annotation in endpoint_args
+                    ],
+                    'kwargs': [
+                        {
+                            'arg': arg,
+                            'annotation': annotation,
+                            'default': default
+                        }
+                        for arg, annotation, default in endpoint_kwargs
+                    ],
+                    'docstring': endpoint_docstring
+                }
+                for endpoint_args, endpoint_kwargs, endpoint_docstring in endpoints
+            ],
             'filepath': str(filepath)
         }
     except Exception as ex:

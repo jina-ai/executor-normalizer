@@ -40,6 +40,8 @@ from normalizer import docker
 ArgType = List[Tuple[str, Optional[str]]]
 KWArgType = List[Tuple[str, Optional[str], str]]
 
+FuncInspectionType = Tuple[ArgType, KWArgType, str]
+
 
 def order_py_modules(py_modules: List['pathlib.Path'], work_path: 'pathlib.Path'):
 
@@ -95,7 +97,9 @@ def _get_args_kwargs(
     return args, kwargs
 
 
-def inspect_executors(py_modules: List['pathlib.Path']):
+def inspect_executors(py_modules: List['pathlib.Path']) -> List[Tuple[
+    str, str, Tuple, List[Tuple]
+]]:
     def _inspect_class_defs(tree):
         return [o for o in ast.walk(tree) if isinstance(o, ast.ClassDef)]
 
@@ -118,42 +122,43 @@ def inspect_executors(py_modules: List['pathlib.Path']):
                 if 'Executor' not in base_names:
                     continue
 
-                has_init_func = False
+                init = None
+                endpoints = []
                 for body_item in class_def.body:
+                    if not isinstance(body_item, ast.FunctionDef):
+                        continue
+                    docstring = ast.get_docstring(body_item)
+                    func_args = [element.arg for element in body_item.args.args]
+                    annotations = [
+                        _get_element_source(
+                            lines,
+                            element.annotation
+                        ) if element.annotation else None
+                        for element in body_item.args.args
+                    ]
+                    func_args_defaults = [
+                        _get_element_source(
+                            lines,
+                            element
+                        ) if element else None
+                        for element in body_item.args.defaults]
+
                     # check __init__ function arguments
                     if (
                         isinstance(body_item, ast.FunctionDef)
                         and body_item.name == '__init__'
                     ):
-                        has_init_func = True
-
-                        func_args = [element.arg for element in body_item.args.args]
-                        annotations = [
-                            _get_element_source(
-                                lines,
-                                element.annotation
-                            ) if element.annotation else None
-                            for element in body_item.args.args
-                        ]
-                        func_args_defaults = [
-                            _get_element_source(
-                                lines,
-                                element
-                            ) if element else None
-                            for element in body_item.args.defaults]
-
-                        executors.append(
-                            (class_def.name, func_args, func_args_defaults, annotations, filepath)
-                        )
-                if not has_init_func:
-                    executors.append((class_def.name, ['self'], [], [], filepath))
-
+                        init = (func_args, func_args_defaults, annotations, docstring)
+                    else:
+                        endpoints.append((func_args, func_args_defaults, annotations, docstring))
+                executors.append((class_def.name, filepath, init, endpoints))
     return executors
 
 
-def filter_executors(executors):
+
+def filter_executors(executors: List[Tuple[str, str, Tuple, List[Tuple]]]):
     result = []
-    for i, (executor, func_args, func_args_defaults, _, _) in enumerate(executors):
+    for i, (executor, _, (func_args, func_args_defaults, _, _), _) in enumerate(executors):
         if len(func_args) - len(func_args_defaults) >= 1:
             result.append(executors[i])
     return result
@@ -176,7 +181,7 @@ def normalize(
     meta: Dict = {'jina': '2'},
     env: Dict = {},
     **kwargs,
-) -> Tuple[str, ArgType, KWArgType, str]:
+) -> Tuple[str, FuncInspectionType, List[FuncInspectionType], str]:
     """Normalize the executor package.
 
     :param work_path: the executor folder where it located
@@ -244,9 +249,21 @@ def normalize(
     if len(executors) == 0:
         raise IllegalExecutorError
 
-    executor, func_args, func_args_defaults, annotations, filepath = executors[0]
+    executor, filepath, init, endpoints = executors[0]
+    if init:
+        init_args, init_args_defaults, init_annotations, init_docstring = init
+        init_args, init_kwargs = _get_args_kwargs(init_args, init_args_defaults, init_annotations)
+        init = (init_args, init_kwargs, init_docstring)
 
-    init_args, init_kwargs = _get_args_kwargs(func_args, func_args_defaults, annotations)
+    for i, endpoint in enumerate(endpoints):
+        if endpoint is not None:
+            endpoint_args, endpoint_args_defaults, endpoint_annotations, endpoint_docstring = endpoint
+            endpoint_args, endpoint_kwargs = _get_args_kwargs(
+                endpoint_args,
+                endpoint_args_defaults,
+                endpoint_annotations
+            )
+            endpoints[i] = (endpoint_args, endpoint_kwargs, endpoint_docstring)
 
     if not config_path.exists():
         try:
@@ -353,4 +370,4 @@ def normalize(
     new_dockerfile_path = work_path / '__jina__.Dockerfile'
     new_dockerfile.dump(new_dockerfile_path)
 
-    return executor, init_args, init_kwargs, filepath
+    return executor, init, endpoints, filepath
