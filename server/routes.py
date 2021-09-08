@@ -43,6 +43,7 @@ class EndpointArgs(BaseModel):
     args: List[Arg]
     kwargs: List[KWArg]
     docstring: Optional[str]
+    requests: str
 
 
 class Executor(BaseModel):
@@ -120,9 +121,10 @@ def normalize(
                         }
                         for arg, annotation, default in endpoint_kwargs
                     ],
-                    'docstring': endpoint_docstring
+                    'docstring': endpoint_docstring,
+                    'requests': endpoint_requests
                 }
-                for endpoint_name, endpoint_args, endpoint_kwargs, endpoint_docstring in endpoints
+                for endpoint_name, endpoint_args, endpoint_kwargs, endpoint_docstring, endpoint_requests in endpoints
             ],
             'filepath': str(filepath)
         }

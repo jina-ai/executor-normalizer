@@ -41,7 +41,7 @@ ArgType = List[Tuple[str, Optional[str]]]
 KWArgType = List[Tuple[str, Optional[str], str]]
 
 InitInspectionType = Tuple[ArgType, KWArgType, str]
-EndpointInspectionType = Tuple[str, ArgType, KWArgType, str]
+EndpointInspectionType = Tuple[str, ArgType, KWArgType, str, str]
 
 
 def order_py_modules(py_modules: List['pathlib.Path'], work_path: 'pathlib.Path'):
@@ -98,6 +98,30 @@ def _get_args_kwargs(
     return args, kwargs
 
 
+def _inspect_requests(element: ast.FunctionDef, lines: List[str]) -> Optional[str]:
+    """
+    Returns requests inspection details about a method
+    This can return:
+        * None : the method is not an endpoint (not decorated with @requests)
+        * "'ALL'": this is an endpoint method that will be triggered on every endpoint (decorated with @requests)
+        * "'/<endpoint>'": this is an endpoint method that will be triggered on '/<endpoint>' (decorated with
+        @requests(on='/<endpoint>')
+        * "['/<endpoint1>', '/<endpoint2>', ...]": this is an endpoint method that will be triggered on any of the
+        endpoints in the list
+    """
+    for decorator in element.decorator_list:
+        if isinstance(decorator, ast.Call) and isinstance(decorator.func, ast.Name) and (
+                decorator.func.id == 'requests' or decorator.func.id == 'jina.requests'
+        ):
+            for keyword in decorator.keywords:
+                if isinstance(keyword, ast.keyword) and keyword.arg == 'on' and isinstance(keyword.value, ast.expr):
+                    return _get_element_source(lines, keyword.value)
+        elif isinstance(decorator, ast.Name) and (
+                decorator.id == 'requests' or decorator.id == 'jina.requests'
+        ):
+            return 'ALL'
+
+
 def inspect_executors(py_modules: List['pathlib.Path']) -> List[Tuple[
     str, str, Tuple, List[Tuple]
 ]]:
@@ -148,7 +172,12 @@ def inspect_executors(py_modules: List['pathlib.Path']) -> List[Tuple[
                     if body_item.name == '__init__':
                         init = (func_args, func_args_defaults, annotations, docstring)
                     else:
-                        endpoints.append((body_item.name, func_args, func_args_defaults, annotations, docstring))
+                        requests_decorator = _inspect_requests(body_item, lines)
+
+                        # add only methods that are decorated with requests
+                        if requests_decorator:
+                            endpoints.append((body_item.name, func_args, func_args_defaults,
+                                              annotations, docstring, requests_decorator))
                 executors.append((class_def.name, filepath, init, endpoints))
     return executors
 
@@ -260,13 +289,14 @@ def normalize(
 
     for i, endpoint in enumerate(endpoints):
         if endpoint is not None:
-            endpoint_name, endpoint_args, endpoint_args_defaults, endpoint_annotations, endpoint_docstring = endpoint
+            endpoint_name, endpoint_args, endpoint_args_defaults, \
+                endpoint_annotations, endpoint_docstring, endpoint_requests = endpoint
             endpoint_args, endpoint_kwargs = _get_args_kwargs(
                 endpoint_args,
                 endpoint_args_defaults,
                 endpoint_annotations
             )
-            endpoints[i] = (endpoint_name, endpoint_args, endpoint_kwargs, endpoint_docstring)
+            endpoints[i] = (endpoint_name, endpoint_args, endpoint_kwargs, endpoint_docstring, endpoint_requests)
 
     if not config_path.exists():
         try:
