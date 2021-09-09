@@ -2,7 +2,7 @@
 
 
 class ExecutorNotFoundError(Exception):
-    """Raised when the executor doesn’t exist. """
+    """Raised when the executor doesn’t exist."""
 
 
 class ExecutorExistsError(Exception):

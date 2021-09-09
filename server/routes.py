@@ -64,8 +64,8 @@ class NormalizeResult(BaseModel):
 
 @router.post('/', name='normalizer', response_model=NormalizeResult)
 def normalize(
-        request: Request,
-        block_data: PackagePayload = None,
+    request: Request,
+    block_data: PackagePayload = None,
 ):
     now = datetime.datetime.now()
 
@@ -77,7 +77,14 @@ def normalize(
     }
 
     try:
-        executor, docstring, init, endpoints, filepath, hubble_score_metrics = _normalize(
+        (
+            executor,
+            docstring,
+            init,
+            endpoints,
+            filepath,
+            hubble_score_metrics,
+        ) = _normalize(
             block_data.package_path,
             meta=block_data.meta,
             env=block_data.env,
@@ -86,21 +93,14 @@ def normalize(
             init_args, init_kwargs, init_docstring = init
             init = {
                 'args': [
-                    {
-                        'arg': arg,
-                        'annotation': annotation
-                    }
+                    {'arg': arg, 'annotation': annotation}
                     for arg, annotation in init_args
                 ],
                 'kwargs': [
-                    {
-                        'arg': arg,
-                        'annotation': annotation,
-                        'default': default
-                    }
+                    {'arg': arg, 'annotation': annotation, 'default': default}
                     for arg, annotation, default in init_kwargs
                 ],
-                'docstring': init_docstring
+                'docstring': init_docstring,
             }
         result['data'] = {
             'executor': executor,
@@ -110,27 +110,20 @@ def normalize(
                 {
                     'name': endpoint_name,
                     'args': [
-                        {
-                            'arg': arg,
-                            'annotation': annotation
-                        }
+                        {'arg': arg, 'annotation': annotation}
                         for arg, annotation in endpoint_args
                     ],
                     'kwargs': [
-                        {
-                            'arg': arg,
-                            'annotation': annotation,
-                            'default': default
-                        }
+                        {'arg': arg, 'annotation': annotation, 'default': default}
                         for arg, annotation, default in endpoint_kwargs
                     ],
                     'docstring': endpoint_docstring,
-                    'requests': endpoint_requests
+                    'requests': endpoint_requests,
                 }
                 for endpoint_name, endpoint_args, endpoint_kwargs, endpoint_docstring, endpoint_requests in endpoints
             ],
             'hubble_score_metrics': hubble_score_metrics,
-            'filepath': str(filepath)
+            'filepath': str(filepath),
         }
     except Exception as ex:
         result['success'] = False

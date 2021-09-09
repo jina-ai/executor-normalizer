@@ -64,15 +64,16 @@ def order_py_modules(py_modules: List['pathlib.Path'], work_path: 'pathlib.Path'
 
 
 def _get_element_source(
-        lines: List[str],
-        element: ast.expr,
-        remove_whitespace: bool = False) -> str:
+    lines: List[str], element: ast.expr, remove_whitespace: bool = False
+) -> str:
     if element.lineno == element.end_lineno:
-        source = lines[element.lineno - 1][element.col_offset:element.end_col_offset]
+        source = lines[element.lineno - 1][element.col_offset : element.end_col_offset]
     else:
-        source = lines[element.lineno - 1][element.col_offset:] + \
-                     ''.join(lines[element.lineno:element.end_lineno - 1]) + \
-                     lines[element.end_lineno - 1][:element.end_col_offset]
+        source = (
+            lines[element.lineno - 1][element.col_offset :]
+            + ''.join(lines[element.lineno : element.end_lineno - 1])
+            + lines[element.end_lineno - 1][: element.end_col_offset]
+        )
     if remove_whitespace:
         source = re.sub(r'\s+', '', source)
         source = source.replace(',', ', ')
@@ -80,26 +81,30 @@ def _get_element_source(
 
 
 def _get_args_kwargs(
-        func_args: List[str],
-        func_args_defaults: List[str],
-        annotations: List[Optional[str]]) -> Tuple[ArgType, KWArgType]:
+    func_args: List[str],
+    func_args_defaults: List[str],
+    annotations: List[Optional[str]],
+) -> Tuple[ArgType, KWArgType]:
     if len(func_args_defaults) == 0:
         kwargs_idx = len(func_args)
     else:
         kwargs_idx = -len(func_args_defaults)
-    kwarg_arguments, kwargs_annotations, kwargs_defaults = func_args[kwargs_idx:],\
-                                                           annotations[kwargs_idx:],\
-                                                           func_args_defaults
+    kwarg_arguments, kwargs_annotations, kwargs_defaults = (
+        func_args[kwargs_idx:],
+        annotations[kwargs_idx:],
+        func_args_defaults,
+    )
 
     kwargs = [
         (arg, annotation, default)
-        for arg, annotation, default in zip(kwarg_arguments, kwargs_annotations, kwargs_defaults)
+        for arg, annotation, default in zip(
+            kwarg_arguments, kwargs_annotations, kwargs_defaults
+        )
     ]
 
     arg_arguments, args_annotations = func_args[:kwargs_idx], annotations[:kwargs_idx]
     args = [
-        (arg, annotation)
-        for arg, annotation in zip(arg_arguments, args_annotations)
+        (arg, annotation) for arg, annotation in zip(arg_arguments, args_annotations)
     ]
     return args, kwargs
 
@@ -116,31 +121,56 @@ def _inspect_requests(element: ast.FunctionDef, lines: List[str]) -> Optional[st
         endpoints in the list
     """
     for decorator in element.decorator_list:
-        if isinstance(decorator, ast.Call) and isinstance(decorator.func, ast.Name) and (
+        if (
+            isinstance(decorator, ast.Call)
+            and isinstance(decorator.func, ast.Name)
+            and (
                 decorator.func.id == 'requests' or decorator.func.id == 'jina.requests'
+            )
         ):
             for keyword in decorator.keywords:
-                if isinstance(keyword, ast.keyword) and keyword.arg == 'on' and isinstance(keyword.value, ast.expr):
-                    return _get_element_source(lines, keyword.value, remove_whitespace=True)
-        elif isinstance(decorator, ast.Call) and isinstance(decorator.func, ast.Attribute) and (
-                decorator.func.attr == 'requests' and isinstance(decorator.func.value, ast.Name)  and \
-                decorator.func.value.id == 'jina'
+                if (
+                    isinstance(keyword, ast.keyword)
+                    and keyword.arg == 'on'
+                    and isinstance(keyword.value, ast.expr)
+                ):
+                    return _get_element_source(
+                        lines, keyword.value, remove_whitespace=True
+                    )
+        elif (
+            isinstance(decorator, ast.Call)
+            and isinstance(decorator.func, ast.Attribute)
+            and (
+                decorator.func.attr == 'requests'
+                and isinstance(decorator.func.value, ast.Name)
+                and decorator.func.value.id == 'jina'
+            )
         ):
             for keyword in decorator.keywords:
-                if isinstance(keyword, ast.keyword) and keyword.arg == 'on' and isinstance(keyword.value, ast.expr):
-                    return _get_element_source(lines, keyword.value, remove_whitespace=True)
-        elif isinstance(decorator, ast.Attribute) and decorator.attr == 'requests' and \
-                isinstance(decorator.value, ast.Name) and decorator.value.id == 'jina':
+                if (
+                    isinstance(keyword, ast.keyword)
+                    and keyword.arg == 'on'
+                    and isinstance(keyword.value, ast.expr)
+                ):
+                    return _get_element_source(
+                        lines, keyword.value, remove_whitespace=True
+                    )
+        elif (
+            isinstance(decorator, ast.Attribute)
+            and decorator.attr == 'requests'
+            and isinstance(decorator.value, ast.Name)
+            and decorator.value.id == 'jina'
+        ):
             return 'ALL'
         elif isinstance(decorator, ast.Name) and (
-                decorator.id == 'requests' or decorator.id == 'jina.requests'
+            decorator.id == 'requests' or decorator.id == 'jina.requests'
         ):
             return 'ALL'
 
 
-def inspect_executors(py_modules: List['pathlib.Path']) -> List[Tuple[
-    str, str, Optional[str], Tuple, List[Tuple]
-]]:
+def inspect_executors(
+    py_modules: List['pathlib.Path'],
+) -> List[Tuple[str, str, Optional[str], Tuple, List[Tuple]]]:
     def _inspect_class_defs(tree):
         return [o for o in ast.walk(tree) if isinstance(o, ast.ClassDef)]
 
@@ -172,19 +202,18 @@ def inspect_executors(py_modules: List['pathlib.Path']) -> List[Tuple[
                     func_args = [element.arg for element in body_item.args.args]
                     annotations = [
                         _get_element_source(
-                            lines,
-                            element.annotation,
-                            remove_whitespace=True
-                        ) if element.annotation else None
+                            lines, element.annotation, remove_whitespace=True
+                        )
+                        if element.annotation
+                        else None
                         for element in body_item.args.args
                     ]
                     func_args_defaults = [
-                        _get_element_source(
-                            lines,
-                            element,
-                            remove_whitespace=False
-                        ) if element else None
-                        for element in body_item.args.defaults]
+                        _get_element_source(lines, element, remove_whitespace=False)
+                        if element
+                        else None
+                        for element in body_item.args.defaults
+                    ]
 
                     # check __init__ function arguments
                     if body_item.name == '__init__':
@@ -196,11 +225,26 @@ def inspect_executors(py_modules: List['pathlib.Path']) -> List[Tuple[
                         if requests_decorator:
                             if re.match('\'.*\'', requests_decorator, flags=re.DOTALL):
                                 requests_decorator = f'[{requests_decorator}]'
-                            endpoints.append((body_item.name, func_args, func_args_defaults,
-                                              annotations, docstring, requests_decorator))
-                executors.append((class_def.name, filepath, ast.get_docstring(class_def), init, endpoints))
+                            endpoints.append(
+                                (
+                                    body_item.name,
+                                    func_args,
+                                    func_args_defaults,
+                                    annotations,
+                                    docstring,
+                                    requests_decorator,
+                                )
+                            )
+                executors.append(
+                    (
+                        class_def.name,
+                        filepath,
+                        ast.get_docstring(class_def),
+                        init,
+                        endpoints,
+                    )
+                )
     return executors
-
 
 
 def filter_executors(executors: List[Tuple[str, str, Tuple, List[Tuple]]]):
@@ -233,7 +277,9 @@ def normalize(
     meta: Dict = {'jina': '2'},
     env: Dict = {},
     **kwargs,
-) -> Tuple[str, Optional[str], InitInspectionType, List[EndpointInspectionType], str, Dict]:
+) -> Tuple[
+    str, Optional[str], InitInspectionType, List[EndpointInspectionType], str, Dict
+]:
     """Normalize the executor package.
 
     :param work_path: the executor folder where it located
@@ -293,7 +339,6 @@ def normalize(
         'tests_exists': bool(test_glob),
     }
 
-
     # if not requirements_path.exists():
     #     requirements_path.touch()
 
@@ -313,19 +358,31 @@ def normalize(
     executor, filepath, docstring, init, endpoints = executors[0]
     if init:
         init_args, init_args_defaults, init_annotations, init_docstring = init
-        init_args, init_kwargs = _get_args_kwargs(init_args, init_args_defaults, init_annotations)
+        init_args, init_kwargs = _get_args_kwargs(
+            init_args, init_args_defaults, init_annotations
+        )
         init = (init_args, init_kwargs, init_docstring)
 
     for i, endpoint in enumerate(endpoints):
         if endpoint is not None:
-            endpoint_name, endpoint_args, endpoint_args_defaults, \
-                endpoint_annotations, endpoint_docstring, endpoint_requests = endpoint
-            endpoint_args, endpoint_kwargs = _get_args_kwargs(
+            (
+                endpoint_name,
                 endpoint_args,
                 endpoint_args_defaults,
-                endpoint_annotations
+                endpoint_annotations,
+                endpoint_docstring,
+                endpoint_requests,
+            ) = endpoint
+            endpoint_args, endpoint_kwargs = _get_args_kwargs(
+                endpoint_args, endpoint_args_defaults, endpoint_annotations
             )
-            endpoints[i] = (endpoint_name, endpoint_args, endpoint_kwargs, endpoint_docstring, endpoint_requests)
+            endpoints[i] = (
+                endpoint_name,
+                endpoint_args,
+                endpoint_kwargs,
+                endpoint_docstring,
+                endpoint_requests,
+            )
 
     if not config_path.exists():
         try:
