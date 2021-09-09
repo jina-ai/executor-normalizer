@@ -9,7 +9,7 @@ class Executor1(Executor):
     My executor docstring
     """
     def __init__(self,
-                 arg1: str, arg2: Optional[List[str]], arg3: Tuple[int, str],
+                 arg1: str, arg2: Optional[List[str]], arg3: Tuple[int, str], *args,
                  arg4: Optional[int] = None, arg5: Optional[Tuple[int, str]] = (123, '123'), **kwargs):
         """
         init docstring

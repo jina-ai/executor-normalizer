@@ -26,7 +26,7 @@ class Executor2(Executor):
                     List[int]
                 ]
             ] = (123, 'test', [123]),
-            **kwargs):
+            *args, **kwargs):
         """
         init docstring
         """
