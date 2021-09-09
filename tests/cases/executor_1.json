@@ -1,0 +1,63 @@
+{
+  "executor": "Executor1",
+  "docstring": "My executor docstring",
+  "init": {
+    "args": [
+      {
+        "arg": "self",
+        "annotation": null
+      },
+      {
+        "arg": "arg1",
+        "annotation": "str"
+      },
+      {
+        "arg": "arg2",
+        "annotation": "Optional[List[str]]"
+      },
+      {
+        "arg": "arg3",
+        "annotation": "Tuple[int, str]"
+      }
+    ],
+    "kwargs": [
+      {
+        "arg": "arg4",
+        "annotation": "Optional[int]",
+        "default": "None"
+      },
+      {
+        "arg": "arg5",
+        "annotation": "Optional[Tuple[int, str]]",
+        "default": "(123, '123')"
+      }
+    ],
+    "docstring": "init docstring"
+  },
+  "endpoints": [
+    {
+      "name": "foo",
+      "args": [
+        {
+          "arg": "self",
+          "annotation": null
+        },
+        {
+          "arg": "arg1",
+          "annotation": null
+        }
+      ],
+      "kwargs": [
+        {
+          "arg": "kwarg1",
+          "annotation": "Optional[int]",
+          "default": "None"
+        }
+      ],
+      "docstring": "foo docstring",
+      "requests": "ALL"
+    }
+  ],
+  "hubble_score_metrics": {},
+  "filepath": ""
+}

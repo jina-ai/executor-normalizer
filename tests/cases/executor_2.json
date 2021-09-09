@@ -1,0 +1,72 @@
+{
+  "executor": "Executor2",
+  "docstring": "My executor docstring\n:param: arg1\n:param: arg2",
+  "init": {
+    "args": [
+      {
+        "arg": "self",
+        "annotation": null
+      },
+      {
+        "arg": "arg1",
+        "annotation": "Optional[Tuple[int, str, List[int]]]"
+      }
+    ],
+    "kwargs": [
+      {
+        "arg": "arg2",
+        "annotation": "Optional[Tuple[int, str, List[int]]]",
+        "default": "(123, 'test', [123])"
+      }
+    ],
+    "docstring": "init docstring"
+  },
+  "endpoints": [
+    {
+      "name": "foo",
+      "args": [
+        {
+          "arg": "self",
+          "annotation": null
+        },
+        {
+          "arg": "arg1",
+          "annotation": "Tuple[int, str]"
+        }
+      ],
+      "kwargs": [
+        {
+          "arg": "arg2",
+          "annotation": "Optional[int]",
+          "default": "None"
+        }
+      ],
+      "docstring": "foo docstring",
+      "requests": "['/index', '/foo']"
+    },
+    {
+      "name": "bar",
+      "args": [
+        {
+          "arg": "self",
+          "annotation": null
+        },
+        {
+          "arg": "docs",
+          "annotation": "Optional[DocumentArray]"
+        }
+      ],
+      "kwargs": [
+        {
+          "arg": "parameters",
+          "annotation": "Dict",
+          "default": "{}"
+        }
+      ],
+      "docstring": "bar docstring\n:param docs:\n:param parameters:",
+      "requests": "['/bar']"
+    }
+  ],
+  "hubble_score_metrics": {},
+  "filepath": ""
+}
