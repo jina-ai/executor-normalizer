@@ -110,8 +110,8 @@ def _inspect_requests(element: ast.FunctionDef, lines: List[str]) -> Optional[st
     This can return:
         * None : the method is not an endpoint (not decorated with @requests)
         * "'ALL'": this is an endpoint method that will be triggered on every endpoint (decorated with @requests)
-        * "'/<endpoint>'": this is an endpoint method that will be triggered on '/<endpoint>' (decorated with
-        @requests(on='/<endpoint>')
+        * "['/<endpoint>']": this is an endpoint method that will be triggered on '/<endpoint>' (decorated with
+        @requests(on='/<endpoint>') or @requests(on=['/<endpoint>'])
         * "['/<endpoint1>', '/<endpoint2>', ...]": this is an endpoint method that will be triggered on any of the
         endpoints in the list
     """
@@ -289,7 +289,6 @@ def normalize(
 
     # manifest = load_manifest(manifest_path)
 
-    executor = None
     # inspect executor
     executors = inspect_executors(py_glob)
     if len(executors) == 0:
