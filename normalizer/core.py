@@ -122,6 +122,16 @@ def _inspect_requests(element: ast.FunctionDef, lines: List[str]) -> Optional[st
             for keyword in decorator.keywords:
                 if isinstance(keyword, ast.keyword) and keyword.arg == 'on' and isinstance(keyword.value, ast.expr):
                     return _get_element_source(lines, keyword.value, remove_whitespace=True)
+        elif isinstance(decorator, ast.Call) and isinstance(decorator.func, ast.Attribute) and (
+                decorator.func.attr == 'requests' and isinstance(decorator.func.value, ast.Name)  and \
+                decorator.func.value.id == 'jina'
+        ):
+            for keyword in decorator.keywords:
+                if isinstance(keyword, ast.keyword) and keyword.arg == 'on' and isinstance(keyword.value, ast.expr):
+                    return _get_element_source(lines, keyword.value, remove_whitespace=True)
+        elif isinstance(decorator, ast.Attribute) and decorator.attr == 'requests' and \
+                isinstance(decorator.value, ast.Name) and decorator.value.id == 'jina':
+            return 'ALL'
         elif isinstance(decorator, ast.Name) and (
                 decorator.id == 'requests' or decorator.id == 'jina.requests'
         ):
