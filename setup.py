@@ -50,7 +50,7 @@ setup(
         'pytest',
         'pytest-runner',
         'black==20.8b1',
-        'isort==4.3.21',    
+        'isort==4.3.21',
     ],
     python_requires='>=3.6',
     entry_points={'console_scripts': ['normalizer=normalizer.main:cli']},

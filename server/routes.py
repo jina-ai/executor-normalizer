@@ -1,36 +1,19 @@
-import traceback
-import sys
 import datetime
-from typing import Dict, Any, Optional
-from pathlib import Path
 from fastapi import APIRouter
 from fastapi.encoders import jsonable_encoder
 from loguru import logger
-from pydantic import BaseModel
 from pydantic.utils import BUILTIN_COLLECTIONS
 from starlette.requests import Request
 
 from normalizer.core import normalize as _normalize
 from normalizer import excepts
+from normalizer.models import PackagePayload, NormalizeResult
 from .errors import ErrorCode
 
 router = APIRouter()
 
 
-class PackagePayload(BaseModel):
-    package_path: Path
-    meta: Optional[Dict] = {'jina': 'master'}
-    env: Optional[Dict] = {}
-
-
-class NormalizeResult(BaseModel):
-    success: bool
-    code: int
-    data: Any
-    message: str
-
-
-@router.post('/', name='normalizer')
+@router.post('/', name='normalizer', response_model=NormalizeResult)
 def normalize(
     request: Request,
     block_data: PackagePayload = None,
@@ -45,11 +28,12 @@ def normalize(
     }
 
     try:
-        _normalize(
+        result['data'] = _normalize(
             block_data.package_path,
             meta=block_data.meta,
             env=block_data.env,
         )
+
     except Exception as ex:
         result['success'] = False
         if isinstance(ex, excepts.ExecutorNotFoundError):

@@ -1,7 +1,9 @@
+import json
 from pathlib import Path
 import pytest
 
 from normalizer import deps, core
+from normalizer.models import ExecutorModel, FuncArgsModel, ArgModel
 
 
 def test_inspect_dummy_execs():
@@ -14,17 +16,49 @@ def test_inspect_dummy_execs():
     assert executors[2][0] == 'Dummy3Executor'
     assert executors[3][0] == 'FailedExecutor'
 
+    for executor in executors:
+        assert len(executor) == 5
+
     # success case
-    assert len(executors[0][1]) == 1
-    assert len(executors[0][2]) == 0
+    assert len(executors[0][3][0]) == 1
+    assert len(executors[0][3][1]) == 0
+    assert len(executors[0][3][2]) == 1
 
     # success case with argument with default values
-    assert len(executors[2][1]) == 2
-    assert len(executors[2][2]) == 1
+    assert len(executors[2][3][0]) == 2
+    assert len(executors[2][3][1]) == 1
+    assert len(executors[2][3][2]) == 2
 
     # failed case
-    assert len(executors[3][1]) == 2
-    assert len(executors[3][2]) == 0
+    assert len(executors[3][3][0]) == 2
+    assert len(executors[3][3][1]) == 0
+    assert len(executors[3][3][2]) == 2
+
+
+@pytest.mark.parametrize(
+    'package_path, expected_path',
+    [
+        (
+            Path(__file__).parent / 'cases' / 'executor_1',
+            Path(__file__).parent / 'cases' / 'executor_1.json',
+        ),
+        (
+            Path(__file__).parent / 'cases' / 'executor_2',
+            Path(__file__).parent / 'cases' / 'executor_2.json',
+        ),
+        (
+            Path(__file__).parent / 'cases' / 'executor_3',
+            Path(__file__).parent / 'cases' / 'executor_3.json',
+        )
+    ],
+)
+def test_get_executor_args(package_path, expected_path):
+    with open(expected_path, 'r') as fp:
+        expected_executor = ExecutorModel(**json.loads(fp.read()))
+        executor = core.normalize(package_path)
+        executor.hubble_score_metrics = expected_executor.hubble_score_metrics
+        executor.filepath = expected_executor.filepath
+        assert executor == expected_executor
 
 
 def test_prelude():

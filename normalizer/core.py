@@ -1,19 +1,16 @@
 import ast
-from logging import log
+import re
 import pathlib
-from platform import version
-from typing import Dict, List
+from typing import Dict, List, Tuple, Optional
+
 from loguru import logger
-from jina.helper import colored, get_readable_size
+from jina.helper import colored
+
 from . import __resources_path__
 from .deps import (
     Package,
-    get_all_imports,
-    get_import_info,
-    get_pkg_names,
     get_dep_tools,
     get_baseimage,
-    dump_requirements,
     parse_requirements,
 )
 from .docker import ExecutorDockerfile
@@ -31,7 +28,13 @@ from .helper import (
     choose_jina_version,
     get_jina_image_tag,
 )
-from normalizer import docker
+from .models import ExecutorModel
+
+ArgType = List[Tuple[str, Optional[str]]]
+KWArgType = List[Tuple[str, Optional[str], str]]
+
+InitInspectionType = Tuple[ArgType, KWArgType, str]
+EndpointInspectionType = Tuple[str, ArgType, KWArgType, str, str]
 
 
 def order_py_modules(py_modules: List['pathlib.Path'], work_path: 'pathlib.Path'):
@@ -53,7 +56,114 @@ def order_py_modules(py_modules: List['pathlib.Path'], work_path: 'pathlib.Path'
     return orders
 
 
-def inspect_executors(py_modules: List['pathlib.Path']):
+def _get_element_source(
+    lines: List[str], element: ast.expr, remove_whitespace: bool = False
+) -> str:
+    if element.lineno == element.end_lineno:
+        source = lines[element.lineno - 1][element.col_offset : element.end_col_offset]
+    else:
+        source = (
+            lines[element.lineno - 1][element.col_offset :]
+            + ''.join(lines[element.lineno : element.end_lineno - 1])
+            + lines[element.end_lineno - 1][: element.end_col_offset]
+        )
+    if remove_whitespace:
+        source = re.sub(r'\s+', '', source)
+        source = source.replace(',', ', ')
+    return source
+
+
+def _get_args_kwargs(
+    func_args: List[str],
+    func_args_defaults: List[str],
+    annotations: List[Optional[str]],
+) -> Tuple[ArgType, KWArgType]:
+    if len(func_args_defaults) == 0:
+        kwargs_idx = len(func_args)
+    else:
+        kwargs_idx = -len(func_args_defaults)
+    kwarg_arguments, kwargs_annotations, kwargs_defaults = (
+        func_args[kwargs_idx:],
+        annotations[kwargs_idx:],
+        func_args_defaults,
+    )
+
+    kwargs = [
+        (arg, annotation, default)
+        for arg, annotation, default in zip(
+            kwarg_arguments, kwargs_annotations, kwargs_defaults
+        )
+    ]
+
+    arg_arguments, args_annotations = func_args[:kwargs_idx], annotations[:kwargs_idx]
+    args = [
+        (arg, annotation) for arg, annotation in zip(arg_arguments, args_annotations)
+    ]
+    return args, kwargs
+
+
+def _inspect_requests(element: ast.FunctionDef, lines: List[str]) -> Optional[str]:
+    """
+    Returns requests inspection details about a method
+    This can return:
+        * None : the method is not an endpoint (not decorated with @requests)
+        * "'ALL'": this is an endpoint method that will be triggered on every endpoint (decorated with @requests)
+        * "['/<endpoint>']": this is an endpoint method that will be triggered on '/<endpoint>' (decorated with
+        @requests(on='/<endpoint>') or @requests(on=['/<endpoint>'])
+        * "['/<endpoint1>', '/<endpoint2>', ...]": this is an endpoint method that will be triggered on any of the
+        endpoints in the list
+    """
+    for decorator in element.decorator_list:
+        if (
+            isinstance(decorator, ast.Call)
+            and isinstance(decorator.func, ast.Name)
+            and (
+                decorator.func.id == 'requests' or decorator.func.id == 'jina.requests'
+            )
+        ):
+            for keyword in decorator.keywords:
+                if (
+                    isinstance(keyword, ast.keyword)
+                    and keyword.arg == 'on'
+                    and isinstance(keyword.value, ast.expr)
+                ):
+                    return _get_element_source(
+                        lines, keyword.value, remove_whitespace=True
+                    )
+        elif (
+            isinstance(decorator, ast.Call)
+            and isinstance(decorator.func, ast.Attribute)
+            and (
+                decorator.func.attr == 'requests'
+                and isinstance(decorator.func.value, ast.Name)
+                and decorator.func.value.id == 'jina'
+            )
+        ):
+            for keyword in decorator.keywords:
+                if (
+                    isinstance(keyword, ast.keyword)
+                    and keyword.arg == 'on'
+                    and isinstance(keyword.value, ast.expr)
+                ):
+                    return _get_element_source(
+                        lines, keyword.value, remove_whitespace=True
+                    )
+        elif (
+            isinstance(decorator, ast.Attribute)
+            and decorator.attr == 'requests'
+            and isinstance(decorator.value, ast.Name)
+            and decorator.value.id == 'jina'
+        ):
+            return 'ALL'
+        elif isinstance(decorator, ast.Name) and (
+            decorator.id == 'requests' or decorator.id == 'jina.requests'
+        ):
+            return 'ALL'
+
+
+def inspect_executors(
+    py_modules: List['pathlib.Path'],
+) -> List[Tuple[str, str, Optional[str], Tuple, List[Tuple]]]:
     def _inspect_class_defs(tree):
         return [o for o in ast.walk(tree) if isinstance(o, ast.ClassDef)]
 
@@ -61,45 +171,85 @@ def inspect_executors(py_modules: List['pathlib.Path']):
     for filepath in py_modules:
         with filepath.open() as fin:
             tree = ast.parse(fin.read(), filename=str(filepath))
+            fin.seek(0)
+            lines = fin.readlines()
 
             for class_def in _inspect_class_defs(tree):
-                base_name = None
+                base_names = []
                 for base_class in class_def.bases:
                     # if the class looks like class MyExecutor(Executor)
                     if isinstance(base_class, ast.Name):
-                        base_name = base_class.id
+                        base_names.append(base_class.id)
                     # if the class looks like class MyExecutor(jina.Executor):
                     if isinstance(base_class, ast.Attribute):
-                        base_name = base_class.attr
-                if base_name != 'Executor':
+                        base_names.append(base_class.attr)
+                if 'Executor' not in base_names:
                     continue
 
-                has_init_func = False
+                init = None
+                endpoints = []
                 for body_item in class_def.body:
-                    # check __init__ function arguments
-                    if (
-                        isinstance(body_item, ast.FunctionDef)
-                        and body_item.name == '__init__'
-                    ):
-                        has_init_func = True
-
-                        func_args = body_item.args.args
-                        func_args_defaults = body_item.args.defaults
-
-                        executors.append(
-                            (class_def.name, func_args, func_args_defaults, filepath)
+                    if not isinstance(body_item, ast.FunctionDef):
+                        continue
+                    docstring = ast.get_docstring(body_item)
+                    func_args = [element.arg for element in body_item.args.args + body_item.args.kwonlyargs]
+                    annotations = [
+                        _get_element_source(
+                            lines, element.annotation, remove_whitespace=True
                         )
-                if not has_init_func:
-                    executors.append((class_def.name, ['self'], [], filepath))
+                        if element.annotation
+                        else None
+                        for element in body_item.args.args + body_item.args.kwonlyargs
+                    ]
+                    func_args_defaults = [
+                        _get_element_source(lines, element, remove_whitespace=False)
+                        if element
+                        else None
+                        for element in body_item.args.defaults + body_item.args.kw_defaults
+                    ]
 
+                    # check __init__ function arguments
+                    if body_item.name == '__init__':
+                        init = (func_args, func_args_defaults, annotations, docstring)
+                    else:
+                        requests_decorator = _inspect_requests(body_item, lines)
+
+                        # add only methods that are decorated with requests
+                        if requests_decorator:
+                            if re.match('\'.*\'', requests_decorator, flags=re.DOTALL):
+                                requests_decorator = f'[{requests_decorator}]'
+                            endpoints.append(
+                                (
+                                    body_item.name,
+                                    func_args,
+                                    func_args_defaults,
+                                    annotations,
+                                    docstring,
+                                    requests_decorator,
+                                )
+                            )
+                executors.append(
+                    (
+                        class_def.name,
+                        filepath,
+                        ast.get_docstring(class_def),
+                        init,
+                        endpoints,
+                    )
+                )
     return executors
 
 
-def filter_executors(executors):
+def filter_executors(executors: List[Tuple[str, str, Tuple, List[Tuple]]]):
     result = []
-    for i, (executor, func_args, func_args_defaults, _) in enumerate(executors):
-        if len(func_args) - len(func_args_defaults) == 1:
+    for i, (executor, _, _, init, _) in enumerate(executors):
+        # An Executor without __init__ should be valid
+        if not init:
             result.append(executors[i])
+        else:
+            func_args, func_args_defaults, _, _ = init
+            if len(func_args) - len(func_args_defaults) >= 1:
+                result.append(executors[i])
     return result
 
 
@@ -115,12 +265,54 @@ def prelude(imports: List['Package']):
     return base_images, dep_tools
 
 
+def to_dto(executor: str, docstring: Optional[str], init: InitInspectionType, endpoints: List[EndpointInspectionType],
+           filepath: str, hubble_score_metrics: Dict) -> ExecutorModel:
+    if init:
+        init_args, init_kwargs, init_docstring = init
+        init = {
+            'args': [
+                {'arg': arg, 'annotation': annotation}
+                for arg, annotation in init_args
+            ],
+            'kwargs': [
+                {'arg': arg, 'annotation': annotation, 'default': default}
+                for arg, annotation, default in init_kwargs
+            ],
+            'docstring': init_docstring,
+        }
+    result = {
+        'executor': executor,
+        'docstring': docstring,
+        'init': init,
+        'endpoints': [
+            {
+                'name': endpoint_name,
+                'args': [
+                    {'arg': arg, 'annotation': annotation}
+                    for arg, annotation in endpoint_args
+                ],
+                'kwargs': [
+                    {'arg': arg, 'annotation': annotation, 'default': default}
+                    for arg, annotation, default in endpoint_kwargs
+                ],
+                'docstring': endpoint_docstring,
+                'requests': endpoint_requests,
+            }
+            for endpoint_name, endpoint_args, endpoint_kwargs, endpoint_docstring, endpoint_requests in endpoints
+        ],
+        'hubble_score_metrics': hubble_score_metrics,
+        'filepath': str(filepath),
+    }
+    return ExecutorModel(**result)
+
+
+
 def normalize(
     work_path: 'pathlib.Path',
     meta: Dict = {'jina': '2'},
     env: Dict = {},
     **kwargs,
-) -> None:
+) -> ExecutorModel:
     """Normalize the executor package.
 
     :param work_path: the executor folder where it located
@@ -171,26 +363,61 @@ def normalize(
         + '\n'
     )
 
+    hubble_score_metrics = {
+        'dockerfile_exists': dockerfile_path.exists(),
+        'manifest_exists': manifest_path.exists(),
+        'config_exists': config_path.exists(),
+        'readme_exists': readme_path.exists(),
+        'requirements_exists': requirements_path.exists(),
+        'tests_exists': bool(test_glob),
+    }
+
     # if not requirements_path.exists():
     #     requirements_path.touch()
 
     # manifest = load_manifest(manifest_path)
 
-    executor = None
+    # inspect executor
+    executors = inspect_executors(py_glob)
+    if len(executors) == 0:
+        raise ExecutorNotFoundError
+    if len(executors) > 1:
+        raise ExecutorExistsError
+
+    executors = filter_executors(executors)
+    if len(executors) == 0:
+        raise IllegalExecutorError
+
+    executor, filepath, docstring, init, endpoints = executors[0]
+    if init:
+        init_args, init_args_defaults, init_annotations, init_docstring = init
+        init_args, init_kwargs = _get_args_kwargs(
+            init_args, init_args_defaults, init_annotations
+        )
+        init = (init_args, init_kwargs, init_docstring)
+
+    for i, endpoint in enumerate(endpoints):
+        if endpoint is not None:
+            (
+                endpoint_name,
+                endpoint_args,
+                endpoint_args_defaults,
+                endpoint_annotations,
+                endpoint_docstring,
+                endpoint_requests,
+            ) = endpoint
+            endpoint_args, endpoint_kwargs = _get_args_kwargs(
+                endpoint_args, endpoint_args_defaults, endpoint_annotations
+            )
+            endpoints[i] = (
+                endpoint_name,
+                endpoint_args,
+                endpoint_kwargs,
+                endpoint_docstring,
+                endpoint_requests,
+            )
 
     if not config_path.exists():
-        # inspect executor
-        executors = inspect_executors(py_glob)
-        if len(executors) == 0:
-            raise ExecutorNotFoundError
-        if len(executors) > 1:
-            raise ExecutorExistsError
-
-        executors = filter_executors(executors)
-        if len(executors) == 0:
-            raise IllegalExecutorError
-
-        executor, *_ = executors[0]
         try:
             py_moduels = order_py_modules(py_glob, work_path)
         except Exception as ex:
@@ -294,3 +521,5 @@ def normalize(
 
     new_dockerfile_path = work_path / '__jina__.Dockerfile'
     new_dockerfile.dump(new_dockerfile_path)
+
+    return to_dto(executor, docstring, init, endpoints, filepath, hubble_score_metrics)
