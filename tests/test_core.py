@@ -54,7 +54,10 @@ def test_inspect_dummy_execs():
                     ],
                     'init docstring',
                 ),
-                [('foo', [('self', None)], [], 'foo docstring', 'ALL')],
+                [(
+                    'foo', [('self', None), ('arg1', None)],
+                    [('kwarg1', 'Optional[int]', 'None')], 'foo docstring', 'ALL'
+                )],
             ),
         ),
         (

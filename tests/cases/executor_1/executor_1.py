@@ -17,7 +17,7 @@ class Executor1(Executor):
         super().__init__(**kwargs)
 
     @requests
-    def foo(self):
+    def foo(self, arg1, *, kwarg1: Optional[int] = None):
         """foo docstring"""
         pass
 
