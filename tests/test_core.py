@@ -52,7 +52,7 @@ def test_inspect_dummy_execs():
             ),
             (
                 'bar', [('self', None), ('docs', 'Optional[DocumentArray]')], [('parameters', 'Dict', '{}')],
-                'bar docstring\n:param docs:\n:param parameters:', '\'/bar\''
+                'bar docstring\n:param docs:\n:param parameters:', '[\'/bar\']'
             ),
         ])
     ),
@@ -64,7 +64,7 @@ def test_inspect_dummy_execs():
             None
         ), [
             ('foo', [('self', None), ('docs', 'DocumentArray')], [('parameters', 'Dict', '{}')], 'foo docstring',
-             '\'/foo\''),
+             '[\'/foo\']'),
             ('bar', [('self', None), ('docs', 'DocumentArray')], [('parameters', 'Dict', '{}')], 'bar docstring',
              'ALL'),
         ])

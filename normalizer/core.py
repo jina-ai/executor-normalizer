@@ -194,6 +194,8 @@ def inspect_executors(py_modules: List['pathlib.Path']) -> List[Tuple[
 
                         # add only methods that are decorated with requests
                         if requests_decorator:
+                            if re.match('\'.*\'', requests_decorator, flags=re.DOTALL):
+                                requests_decorator = f'[{requests_decorator}]'
                             endpoints.append((body_item.name, func_args, func_args_defaults,
                                               annotations, docstring, requests_decorator))
                 executors.append((class_def.name, filepath, ast.get_docstring(class_def), init, endpoints))
