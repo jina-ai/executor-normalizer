@@ -71,7 +71,9 @@ def test_inspect_dummy_execs():
     ),
 ])
 def test_get_executor_args(package_path, expected):
-    executor, docstring, init, endpoints, filepath = core.normalize(package_path, meta={'jina': 'master'}, env={})
+    executor, docstring, init, endpoints, _, _ = core.normalize(
+        package_path, meta={'jina': 'master'}, env={}
+    )
     expected_executor, expected_docstring, expected_init, expected_endpoints = expected
     assert executor == expected_executor
     assert docstring == expected_docstring

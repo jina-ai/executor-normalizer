@@ -233,7 +233,7 @@ def normalize(
     meta: Dict = {'jina': '2'},
     env: Dict = {},
     **kwargs,
-) -> Tuple[str, Optional[str], InitInspectionType, List[EndpointInspectionType], str]:
+) -> Tuple[str, Optional[str], InitInspectionType, List[EndpointInspectionType], str, Dict]:
     """Normalize the executor package.
 
     :param work_path: the executor folder where it located
@@ -283,6 +283,16 @@ def normalize(
         )
         + '\n'
     )
+
+    hubble_score_metrics = {
+        'dockerfile_exists': dockerfile_path.exists(),
+        'manifest_exists': manifest_path.exists(),
+        'config_exists': config_path.exists(),
+        'readme_exists': readme_path.exists(),
+        'requirements_exists': requirements_path.exists(),
+        'tests_exists': bool(test_glob),
+    }
+
 
     # if not requirements_path.exists():
     #     requirements_path.touch()
@@ -422,4 +432,4 @@ def normalize(
     new_dockerfile_path = work_path / '__jina__.Dockerfile'
     new_dockerfile.dump(new_dockerfile_path)
 
-    return executor, docstring, init, endpoints, filepath
+    return executor, docstring, init, endpoints, filepath, hubble_score_metrics

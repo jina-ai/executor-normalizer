@@ -51,6 +51,7 @@ class Executor(BaseModel):
     docstring: Optional[str]
     init: Optional[FuncArgs]
     endpoints: List[EndpointArgs]
+    hubble_score_metrics: Dict
     filepath: str
 
 
@@ -76,7 +77,7 @@ def normalize(
     }
 
     try:
-        executor, docstring, init, endpoints, filepath = _normalize(
+        executor, docstring, init, endpoints, filepath, hubble_score_metrics = _normalize(
             block_data.package_path,
             meta=block_data.meta,
             env=block_data.env,
@@ -128,6 +129,7 @@ def normalize(
                 }
                 for endpoint_name, endpoint_args, endpoint_kwargs, endpoint_docstring, endpoint_requests in endpoints
             ],
+            'hubble_score_metrics': hubble_score_metrics,
             'filepath': str(filepath)
         }
     except Exception as ex:
