@@ -1,23 +1,16 @@
 import ast
 import re
-from logging import log
 import pathlib
-from operator import itemgetter
-from platform import version
 from typing import Dict, List, Tuple, Optional
 
-import numpy as np
 from loguru import logger
-from jina.helper import colored, get_readable_size
+from jina.helper import colored
+
 from . import __resources_path__
 from .deps import (
     Package,
-    get_all_imports,
-    get_import_info,
-    get_pkg_names,
     get_dep_tools,
     get_baseimage,
-    dump_requirements,
     parse_requirements,
 )
 from .docker import ExecutorDockerfile
@@ -35,7 +28,7 @@ from .helper import (
     choose_jina_version,
     get_jina_image_tag,
 )
-from normalizer import docker
+from .models import ExecutorModel
 
 ArgType = List[Tuple[str, Optional[str]]]
 KWArgType = List[Tuple[str, Optional[str], str]]
@@ -272,14 +265,54 @@ def prelude(imports: List['Package']):
     return base_images, dep_tools
 
 
+def to_dto(executor: str, docstring: Optional[str], init: InitInspectionType, endpoints: List[EndpointInspectionType],
+           filepath: str, hubble_score_metrics: Dict) -> ExecutorModel:
+    if init:
+        init_args, init_kwargs, init_docstring = init
+        init = {
+            'args': [
+                {'arg': arg, 'annotation': annotation}
+                for arg, annotation in init_args
+            ],
+            'kwargs': [
+                {'arg': arg, 'annotation': annotation, 'default': default}
+                for arg, annotation, default in init_kwargs
+            ],
+            'docstring': init_docstring,
+        }
+    result = {
+        'executor': executor,
+        'docstring': docstring,
+        'init': init,
+        'endpoints': [
+            {
+                'name': endpoint_name,
+                'args': [
+                    {'arg': arg, 'annotation': annotation}
+                    for arg, annotation in endpoint_args
+                ],
+                'kwargs': [
+                    {'arg': arg, 'annotation': annotation, 'default': default}
+                    for arg, annotation, default in endpoint_kwargs
+                ],
+                'docstring': endpoint_docstring,
+                'requests': endpoint_requests,
+            }
+            for endpoint_name, endpoint_args, endpoint_kwargs, endpoint_docstring, endpoint_requests in endpoints
+        ],
+        'hubble_score_metrics': hubble_score_metrics,
+        'filepath': str(filepath),
+    }
+    return ExecutorModel(**result)
+
+
+
 def normalize(
     work_path: 'pathlib.Path',
     meta: Dict = {'jina': '2'},
     env: Dict = {},
     **kwargs,
-) -> Tuple[
-    str, Optional[str], InitInspectionType, List[EndpointInspectionType], str, Dict
-]:
+) -> ExecutorModel:
     """Normalize the executor package.
 
     :param work_path: the executor folder where it located
@@ -489,4 +522,4 @@ def normalize(
     new_dockerfile_path = work_path / '__jina__.Dockerfile'
     new_dockerfile.dump(new_dockerfile_path)
 
-    return executor, docstring, init, endpoints, filepath, hubble_score_metrics
+    return to_dto(executor, docstring, init, endpoints, filepath, hubble_score_metrics)
