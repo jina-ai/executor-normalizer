@@ -199,20 +199,20 @@ def inspect_executors(
                     if not isinstance(body_item, ast.FunctionDef):
                         continue
                     docstring = ast.get_docstring(body_item)
-                    func_args = [element.arg for element in body_item.args.args]
+                    func_args = [element.arg for element in body_item.args.args + body_item.args.kwonlyargs]
                     annotations = [
                         _get_element_source(
                             lines, element.annotation, remove_whitespace=True
                         )
                         if element.annotation
                         else None
-                        for element in body_item.args.args
+                        for element in body_item.args.args + body_item.args.kwonlyargs
                     ]
                     func_args_defaults = [
                         _get_element_source(lines, element, remove_whitespace=False)
                         if element
                         else None
-                        for element in body_item.args.defaults
+                        for element in body_item.args.defaults + body_item.args.kw_defaults
                     ]
 
                     # check __init__ function arguments
