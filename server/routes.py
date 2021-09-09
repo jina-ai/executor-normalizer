@@ -48,6 +48,7 @@ class EndpointArgs(BaseModel):
 
 class Executor(BaseModel):
     executor: str
+    docstring: Optional[str]
     init: Optional[FuncArgs]
     endpoints: List[EndpointArgs]
     filepath: str
@@ -75,7 +76,7 @@ def normalize(
     }
 
     try:
-        executor, init, endpoints, filepath = _normalize(
+        executor, docstring, init, endpoints, filepath = _normalize(
             block_data.package_path,
             meta=block_data.meta,
             env=block_data.env,
@@ -102,6 +103,7 @@ def normalize(
             }
         result['data'] = {
             'executor': executor,
+            'docstring': docstring,
             'init': init,
             'endpoints': [
                 {

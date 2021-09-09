@@ -65,16 +65,18 @@ def order_py_modules(py_modules: List['pathlib.Path'], work_path: 'pathlib.Path'
 
 def _get_element_source(
         lines: List[str],
-        element: ast.expr) -> str:
+        element: ast.expr,
+        remove_whitespace: bool = False) -> str:
     if element.lineno == element.end_lineno:
-        annotation = lines[element.lineno - 1][element.col_offset:element.end_col_offset]
+        source = lines[element.lineno - 1][element.col_offset:element.end_col_offset]
     else:
-        annotation = lines[element.lineno - 1][element.col_offset:] + \
+        source = lines[element.lineno - 1][element.col_offset:] + \
                      ''.join(lines[element.lineno:element.end_lineno - 1]) + \
                      lines[element.end_lineno - 1][:element.end_col_offset]
-    annotation = re.sub(r'\s+', '', annotation)
-    annotation = annotation.replace(',', ', ')
-    return annotation
+    if remove_whitespace:
+        source = re.sub(r'\s+', '', source)
+        source = source.replace(',', ', ')
+    return source
 
 
 def _get_args_kwargs(
@@ -119,7 +121,7 @@ def _inspect_requests(element: ast.FunctionDef, lines: List[str]) -> Optional[st
         ):
             for keyword in decorator.keywords:
                 if isinstance(keyword, ast.keyword) and keyword.arg == 'on' and isinstance(keyword.value, ast.expr):
-                    return _get_element_source(lines, keyword.value)
+                    return _get_element_source(lines, keyword.value, remove_whitespace=True)
         elif isinstance(decorator, ast.Name) and (
                 decorator.id == 'requests' or decorator.id == 'jina.requests'
         ):
@@ -127,7 +129,7 @@ def _inspect_requests(element: ast.FunctionDef, lines: List[str]) -> Optional[st
 
 
 def inspect_executors(py_modules: List['pathlib.Path']) -> List[Tuple[
-    str, str, Tuple, List[Tuple]
+    str, str, Optional[str], Tuple, List[Tuple]
 ]]:
     def _inspect_class_defs(tree):
         return [o for o in ast.walk(tree) if isinstance(o, ast.ClassDef)]
@@ -161,14 +163,16 @@ def inspect_executors(py_modules: List['pathlib.Path']) -> List[Tuple[
                     annotations = [
                         _get_element_source(
                             lines,
-                            element.annotation
+                            element.annotation,
+                            remove_whitespace=True
                         ) if element.annotation else None
                         for element in body_item.args.args
                     ]
                     func_args_defaults = [
                         _get_element_source(
                             lines,
-                            element
+                            element,
+                            remove_whitespace=False
                         ) if element else None
                         for element in body_item.args.defaults]
 
@@ -182,14 +186,14 @@ def inspect_executors(py_modules: List['pathlib.Path']) -> List[Tuple[
                         if requests_decorator:
                             endpoints.append((body_item.name, func_args, func_args_defaults,
                                               annotations, docstring, requests_decorator))
-                executors.append((class_def.name, filepath, init, endpoints))
+                executors.append((class_def.name, filepath, ast.get_docstring(class_def), init, endpoints))
     return executors
 
 
 
 def filter_executors(executors: List[Tuple[str, str, Tuple, List[Tuple]]]):
     result = []
-    for i, (executor, _, init, _) in enumerate(executors):
+    for i, (executor, _, _, init, _) in enumerate(executors):
         # An Executor without __init__ should be valid
         if not init:
             result.append(executors[i])
@@ -217,7 +221,7 @@ def normalize(
     meta: Dict = {'jina': '2'},
     env: Dict = {},
     **kwargs,
-) -> Tuple[str, InitInspectionType, List[EndpointInspectionType], str]:
+) -> Tuple[str, Optional[str], InitInspectionType, List[EndpointInspectionType], str]:
     """Normalize the executor package.
 
     :param work_path: the executor folder where it located
@@ -285,7 +289,7 @@ def normalize(
     if len(executors) == 0:
         raise IllegalExecutorError
 
-    executor, filepath, init, endpoints = executors[0]
+    executor, filepath, docstring, init, endpoints = executors[0]
     if init:
         init_args, init_args_defaults, init_annotations, init_docstring = init
         init_args, init_kwargs = _get_args_kwargs(init_args, init_args_defaults, init_annotations)
@@ -407,4 +411,4 @@ def normalize(
     new_dockerfile_path = work_path / '__jina__.Dockerfile'
     new_dockerfile.dump(new_dockerfile_path)
 
-    return executor, init, endpoints, filepath
+    return executor, docstring, init, endpoints, filepath
