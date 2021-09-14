@@ -20,11 +20,8 @@ class FuncArgsModel(BaseModel):
     docstring: Optional[str]
 
 
-class EndpointArgsModel(BaseModel):
+class EndpointArgsModel(FuncArgsModel):
     name: str
-    args: List[ArgModel]
-    kwargs: List[KWArgModel]
-    docstring: Optional[str]
     requests: str
 
 
