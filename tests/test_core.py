@@ -49,6 +49,10 @@ def test_inspect_dummy_execs():
         (
             Path(__file__).parent / 'cases' / 'executor_3',
             Path(__file__).parent / 'cases' / 'executor_3.json',
+        ),
+        (
+            Path(__file__).parent / 'cases' / 'nested',
+            Path(__file__).parent / 'cases' / 'nested_executor.json',
         )
     ],
 )

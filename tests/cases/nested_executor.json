@@ -1,0 +1,46 @@
+{
+  "executor": "NestedExecutor",
+  "docstring": "Nested Executor",
+  "init": {
+    "args": [
+      {
+        "arg": "self",
+        "annotation": null
+      }
+    ],
+    "kwargs": [
+      {
+        "arg": "arg1",
+        "annotation": "int",
+        "default": "1"
+      }
+    ],
+    "docstring": null
+  },
+  "endpoints": [
+    {
+      "name": "foo",
+      "args": [
+        {
+          "arg": "self",
+          "annotation": null
+        },
+        {
+          "arg": "docs",
+          "annotation": "DocumentArray"
+        }
+      ],
+      "kwargs": [
+        {
+          "arg": "parameters",
+          "annotation": "Dict",
+          "default": "{}"
+        }
+      ],
+      "docstring": "foo docstring",
+      "requests": "['/foo']"
+    }
+  ],
+  "hubble_score_metrics": {},
+  "filepath": ""
+}
