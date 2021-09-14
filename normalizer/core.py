@@ -341,7 +341,7 @@ def normalize(
     readme_path = work_path / 'README.md'
     requirements_path = work_path / 'requirements.txt'
 
-    py_glob = list(work_path.glob('*.py'))
+    py_glob = list(work_path.glob('*.py')) + list(work_path.glob('executor/*.py'))
     test_glob = list(work_path.glob('tests/test_*.py'))
 
     completeness = {
