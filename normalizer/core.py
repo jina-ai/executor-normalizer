@@ -340,6 +340,7 @@ def normalize(
     config_path = work_path / 'config.yml'
     readme_path = work_path / 'README.md'
     requirements_path = work_path / 'requirements.txt'
+    gpu_dockerfile_path = work_path / 'Dockerfile.gpu'
 
     py_glob = list(work_path.glob('*.py')) + list(work_path.glob('executor/*.py'))
     test_glob = list(work_path.glob('tests/test_*.py'))
@@ -370,6 +371,7 @@ def normalize(
         'readme_exists': readme_path.exists(),
         'requirements_exists': requirements_path.exists(),
         'tests_exists': bool(test_glob),
+        'gpu_dockerfile_exists': gpu_dockerfile_path.exists(),
     }
 
     # if not requirements_path.exists():
