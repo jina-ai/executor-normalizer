@@ -4,5 +4,5 @@ ARG ARG_BASE_IMAGE
 FROM ${ARG_BASE_IMAGE}
 
 ARG ARG_JINA_VERSION
-RUN JINA_PIP_INSTALL_PERF=1 pip install --upgrade jina==${ARG_JINA_VERSION}
+RUN pip install --upgrade jina==${ARG_JINA_VERSION}
 
