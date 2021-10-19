@@ -2,12 +2,12 @@ from fastapi import APIRouter, FastAPI
 from loguru import logger
 from starlette.config import Config
 
-import normalizer
+import server
 
 from .routes import router
 
-APP_VERSION = normalizer.__version__
-APP_NAME = 'Jina Executor Package Normalizer'
+APP_VERSION = server.__version__
+APP_NAME = 'Jina Hubble Python Services'
 API_PREFIX = '/normalizer'
 
 config = Config()

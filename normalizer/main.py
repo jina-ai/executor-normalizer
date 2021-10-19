@@ -1,9 +1,9 @@
 import pathlib
 
 import click
-from jina import __version__ as __iina_version__
+from jina import __version__ as __jina_version__
 
-from . import __version__ as __normalizer_version__
+from server import __version__
 from .core import normalize
 
 
@@ -12,7 +12,7 @@ from .core import normalize
 @click.option('--jina-version', default='2', help='Specify the jina version.')
 @click.option('--verbose', '-v', is_flag=True, help='Enables verbose mode.')
 @click.version_option(
-    f'{__normalizer_version__} (Jina=v{__iina_version__})',
+    f'{__version__} (Jina=v{__jina_version__})',
     prog_name='executor-normarlizer',
 )
 def cli(path, jina_version, verbose):
