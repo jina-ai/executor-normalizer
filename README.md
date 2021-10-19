@@ -1,18 +1,23 @@
-# Executor Package Normalizer in Hubble
+# Hubble Python Services
+Hubble-related http services that rely on Python and Jina Core. It contains several components **Normalizer** and **Sandbox**.
 
+## Normalizer
 
-***🦆 Note: `master` branch is the developing branch.**
+Normalize Executor packages uploaded by users.
 
-## 💡 Features
+### Features
 
-- ✅ Complete `config.yml`
-- ✅ Complete `Dockerfile`
-- ✅ Identify `Executor` class name
-- ✅ Identify **Illegal** executor
-- ✅ Support **toplogical sort of py-modules** based on theire dependency relations
+- Complete `config.yml`
+- Complete `Dockerfile`
+- Identify `Executor` class name
+- Identify **Illegal** executor
+- Support **toplogical sort of py-modules** based on theire dependency relations
 
+## Sandbox
 
-## 🚀 Setup
+Deploy sandbox for Executors.
+
+## Setup
 
 ```bash
 
@@ -28,7 +33,7 @@ $ docker build -t jinaai/executor_normalizer .
 
 
 
-## 👋 Usage
+## Usage
 
 -  Usage as a command tool for ease-of-testing
 

@@ -1,4 +1,4 @@
-FROM jinaai/jina:2.0.3-py38-standard
+FROM jinaai/jina:2-py38-standard
 
 # setup the workspace
 WORKDIR /workspace
