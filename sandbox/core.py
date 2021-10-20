@@ -7,7 +7,6 @@ from kubernetes.client import ApiException
 from .constants import SANDBOX_DOMAIN
 
 try:
-    # TODO set correct kube config path
     config.load_kube_config()
 except Exception as ex:
     print('Error when loading kube config. Sandbox is not avaliable.')
