@@ -8,7 +8,7 @@ from starlette.requests import Request
 from normalizer.core import normalize as _normalize
 from normalizer import excepts
 from normalizer.models import PackagePayload, NormalizeResult
-from .errors import ErrorCode
+from server.errors import ErrorCode
 
 router = APIRouter()
 

@@ -44,6 +44,6 @@ $ normalizer /path/to/executor_folder -v
 - Deploy a service via Docker container
 
 ```
-# access docs via http://127.0.0.1:8888/normalizer/docs
+# access docs via http://127.0.0.1:8888/docs
 $ docker run -it --rm -p 8888:8888 -v ${PWD}:/workspace jinaai/executor_normalizer
 ```
