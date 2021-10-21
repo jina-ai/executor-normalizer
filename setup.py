@@ -53,7 +53,11 @@ setup(
         'isort==4.3.21',
     ],
     python_requires='>=3.6',
-    entry_points={'console_scripts': ['normalizer=normalizer.main:cli']},
+    entry_points={
+        'console_scripts': [
+            'executor_manager=cli.main:cli',
+        ]
+    },
     classifiers=[
         'Programming Language :: Python :: 3',
         'Development Status :: 4 - Beta',

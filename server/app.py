@@ -4,11 +4,11 @@ from starlette.config import Config
 
 import server
 
-from .routes import router
+from server.routes.normalizer import router as normalizer_router
+from server.routes.sandbox import router as sandbox_router
 
 APP_VERSION = server.__version__
 APP_NAME = 'Jina Hubble Python Services'
-API_PREFIX = '/normalizer'
 
 config = Config()
 
@@ -20,9 +20,10 @@ def create_app() -> FastAPI:
 
     api_router = APIRouter()
 
-    api_router.include_router(router, tags=['normalizer'], prefix='/api/v1')
+    api_router.include_router(normalizer_router, tags=['normalizer'], prefix='/normalizer/api/v1')
+    api_router.include_router(sandbox_router, tags=['sandbox'], prefix='/sandbox/api/v1')
 
-    fast_app.include_router(api_router, prefix=API_PREFIX)
+    fast_app.include_router(api_router)
 
     from fastapi.openapi.docs import (
         get_redoc_html,
@@ -30,7 +31,7 @@ def create_app() -> FastAPI:
         get_swagger_ui_oauth2_redirect_html,
     )
 
-    @fast_app.get(f'{API_PREFIX}/docs', include_in_schema=False)
+    @fast_app.get(f'/docs', include_in_schema=False)
     async def custom_swagger_ui_html():
         return get_swagger_ui_html(
             openapi_url=fast_app.openapi_url,
@@ -41,13 +42,13 @@ def create_app() -> FastAPI:
         )
 
     @fast_app.get(
-        f'{API_PREFIX}/{fast_app.swagger_ui_oauth2_redirect_url}',
+        f'/{fast_app.swagger_ui_oauth2_redirect_url}',
         include_in_schema=False,
     )
     async def swagger_ui_redirect():
         return get_swagger_ui_oauth2_redirect_html()
 
-    @fast_app.get(f'{API_PREFIX}/redoc', include_in_schema=False)
+    @fast_app.get(f'/redoc', include_in_schema=False)
     async def redoc_html():
         return get_redoc_html(
             openapi_url=fast_app.openapi_url,
