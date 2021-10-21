@@ -39,6 +39,7 @@ $ docker build -t jinaai/executor_normalizer .
 
 ```bash
 $ normalizer /path/to/executor_folder -v
+$ sandbox deploy --executor EXECUTOR_NAME
 ```
 
 - Deploy a service via Docker container
