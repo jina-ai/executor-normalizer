@@ -55,8 +55,7 @@ setup(
     python_requires='>=3.6',
     entry_points={
         'console_scripts': [
-            'normalizer=normalizer.main:cli',
-            'sandbox=sandbox.main:cli'
+            'executor_manager=cli.main:cli',
         ]
     },
     classifiers=[
