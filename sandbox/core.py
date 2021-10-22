@@ -18,6 +18,7 @@ v1_api = client.CoreV1Api(api_client=k8s_client)
 extensions_api = client.ExtensionsV1beta1Api(api_client=k8s_client)
 networking_api = client.NetworkingV1beta1Api(api_client=k8s_client)
 
+
 def delete_flow(namespace):
     print('delete namespace for: ', namespace)
     try:
@@ -29,13 +30,17 @@ def delete_flow(namespace):
             raise Exception('Error during namespace deletion', e)
     wait_for_namespace_to_be_deleted(namespace)
 
+
 def create_ingress(executor_lowercase):
-    ingress_yaml = yaml.safe_load(
-        f'''
+    for service_name, purpose, port in [('gateway', 'web', '8080'), (executor_lowercase, 'flow', '8081')]:
+        print(f'create ingress on {service_name} for {purpose}')
+        ingress_name = f'{executor_lowercase}-{purpose}'
+        ingress_yaml = yaml.safe_load(
+            f'''
 apiVersion: networking.k8s.io/v1beta1\n
 kind: Ingress\n
 metadata:\n
-  name: {executor_lowercase}\n
+  name: {ingress_name}\n
   namespace: {executor_lowercase}\n
   annotations:\n
     kubernetes.io/ingress.class: nginx\n
@@ -44,15 +49,15 @@ spec:\n
   rules:\n
   - http:\n
       paths:\n
-      - path: /sandbox/{executor_lowercase}/(.+)\n
+      - path: /sandbox/{purpose}/{executor_lowercase}/(.+)\n
         pathType: Prefix\n
         backend:\n
-          serviceName: gateway\n
-          servicePort: 8080\n
+          serviceName: {service_name}\n
+          servicePort: {port}\n
         '''
-    )
-    networking_api.create_namespaced_ingress(executor_lowercase, ingress_yaml)
-    wait_for_ingress_to_start(executor_lowercase, executor_lowercase)
+        )
+        networking_api.create_namespaced_ingress(executor_lowercase, ingress_yaml)
+        wait_for_ingress_to_start(ingress_name, executor_lowercase)
 
 
 def wait_for_namespace_to_be_deleted(executor_lowercase):
@@ -80,13 +85,14 @@ def wait_for_ingress_to_start(ingress_name, namespace):
 def deploy_flow(executor, executor_lowercase, endpoints, replicas):
     print('deploy flow for: ', executor)
     f = Flow(
-        name=f'{executor_lowercase}',
+        name=executor_lowercase,
         port_expose=8080,
         infrastructure='K8S',
         protocol='http',
         replicas=replicas,
     ).add(
-        uses=f'jinahub+docker://{executor}'
+        uses=f'jinahub+docker://{executor}',
+        name=executor_lowercase
     )
     for endpoint in endpoints:
         f.expose_endpoint(f'/{endpoint}')
@@ -94,12 +100,13 @@ def deploy_flow(executor, executor_lowercase, endpoints, replicas):
     print('create ingress for: ', executor)
     create_ingress(executor_lowercase)
 
+
 def deploy(executor, endpoints, replicas):
     start_time = time.time()
     executor_lowercase = executor.lower()
     delete_flow(executor_lowercase)
     deploy_flow(executor, executor_lowercase, endpoints, replicas)
-    print(f'Deployment of {executor} successful [endpoints: {endpoints}, replicas{replicas}]. Cost {time.time() - start_time} seconds totally')
-    
-    return f'http://{SANDBOX_DOMAIN}/sandbox/{executor_lowercase}'
+    print(
+        f'Deployment of {executor} successful [endpoints: {endpoints}, replicas{replicas}]. Cost {time.time() - start_time} seconds totally')
 
+    return f'http://{SANDBOX_DOMAIN}/sandbox/{executor_lowercase}'
