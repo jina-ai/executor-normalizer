@@ -30,7 +30,7 @@ def deploy(
         result['data'] = data
     except Exception as ex:
         result['success'] = False
-        result['code'] = ErrorCode.Others
+        result['code'] = ErrorCode.Others.value
         result['message'] = str(ex)
 
     logger.info(
