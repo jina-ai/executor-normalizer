@@ -32,7 +32,7 @@ def delete_flow(namespace):
 
 
 def create_ingress(executor_lowercase):
-    for service_name, purpose, port in [('gateway', 'web', '8080'), (executor_lowercase, 'flow', '8081')]:
+    for service_name, purpose, port in [('gateway', 'flow', '8080'), (executor_lowercase, 'pod', '8081')]:
         print(f'create ingress on {service_name} for {purpose}')
         ingress_name = f'{executor_lowercase}-{purpose}'
         ingress_yaml = yaml.safe_load(
@@ -109,4 +109,7 @@ def deploy(executor, endpoints, replicas):
     print(
         f'Deployment of {executor} successful [endpoints: {endpoints}, replicas{replicas}]. Cost {time.time() - start_time} seconds totally')
 
-    return f'http://{SANDBOX_DOMAIN}/sandbox/{executor_lowercase}'
+    return {
+        'flow_url': f'http://{SANDBOX_DOMAIN}/sandbox/flow/{executor_lowercase}',
+        'pod_url': f'http://{SANDBOX_DOMAIN}/sandbox/pod/{executor_lowercase}',
+    }

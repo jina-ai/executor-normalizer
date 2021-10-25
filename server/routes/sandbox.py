@@ -26,10 +26,8 @@ def deploy(
     }
 
     try:
-        url = sandbox_deploy(block_data.executor, block_data.endpoints, block_data.replicas)
-        result['data'] = {
-            'url': url
-        }
+        data = sandbox_deploy(block_data.executor, block_data.endpoints, block_data.replicas)
+        result['data'] = data
     except Exception as ex:
         result['success'] = False
         result['code'] = ErrorCode.Others
