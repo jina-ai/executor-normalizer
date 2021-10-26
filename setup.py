@@ -55,7 +55,7 @@ setup(
     python_requires='>=3.6',
     entry_points={
         'console_scripts': [
-            'executor_manager=cli.main:cli',
+            'executor_manager=executor_manager.main:cli',
         ]
     },
     classifiers=[
