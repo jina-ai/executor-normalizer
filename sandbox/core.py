@@ -1,4 +1,5 @@
 import time
+import os
 
 import yaml
 from kubernetes import client, config
@@ -7,7 +8,7 @@ from kubernetes.client import ApiException
 from .constants import SANDBOX_DOMAIN
 
 try:
-    config.load_kube_config()
+    config.load_kube_config(os.environ.get('KUBECONFIG'))
 except Exception as ex:
     print('Error when loading kube config. Sandbox is not avaliable.')
     print(str(ex))
