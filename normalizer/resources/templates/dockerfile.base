@@ -22,6 +22,8 @@ ENV JINA_VERSION=${ARG_JINA_VERSION} \
 # Both JINA_PIP_INSTALL_CORE and JINA_PIP_INSTALL_PERF were set no matter in any cases
 # https://github.com/jina-ai/jina/pull/3673
 RUN unset JINA_PIP_INSTALL_CORE && \
-    unset JINA_PIP_INSTALL_PERF && \
-    JINA_PIP_INSTALL_PERF=1 pip install --upgrade jina==${ARG_JINA_VERSION}
+    unset JINA_PIP_INSTALL_PERF
 
+ENV JINA_PIP_INSTALL_PERF=1
+
+RUN if [ "${ARG_JINA_VERSION}" = 'master' ]; then pip install --upgrade --pre jina; else pip install --upgrade jina==${ARG_JINA_VERSION}; fi
