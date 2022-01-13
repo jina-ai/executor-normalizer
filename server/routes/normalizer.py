@@ -58,6 +58,7 @@ def normalize(
             result['code'] = ErrorCode.Others.value
 
             result['message'] = str(ex)
+            logger.exception(ex)
 
     logger.info(
         {
