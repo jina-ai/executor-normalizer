@@ -6,6 +6,7 @@ ARG ARG_BASE_IMAGE
 FROM ${ARG_BASE_IMAGE}
 
 ARG ARG_JINA_VERSION
+ARG ARG_PIP_JINA_VERSION
 ARG ARG_BUILD_DATE
 # the following label use ARG hence will invalid the cache
 LABEL org.opencontainers.image.created=${ARG_BUILD_DATE} \
@@ -28,5 +29,4 @@ ENV JINA_PIP_INSTALL_PERF=1
 
 # Need to uninstall jina first when upgrading 2.x to 3.x
 # https://github.com/jina-ai/jina/issues/4194
-RUN pip uninstall -y jina && \
-    if [ "${ARG_JINA_VERSION}" = 'master' ]; then pip install --upgrade --pre jina; else pip install --upgrade jina==${ARG_JINA_VERSION}; fi
+RUN pip uninstall -y jina && pip install --upgrade ${ARG_PIP_JINA_VERSION}
