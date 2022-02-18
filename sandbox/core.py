@@ -16,7 +16,6 @@ except Exception as ex:
 k8s_client = client.ApiClient()
 
 v1_api = client.CoreV1Api(api_client=k8s_client)
-extensions_api = client.ExtensionsV1beta1Api(api_client=k8s_client)
 networking_api = client.NetworkingV1beta1Api(api_client=k8s_client)
 
 
