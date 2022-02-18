@@ -28,7 +28,7 @@ $ cd executor-normalizer
 $ pip install .
 
 # Option 2: build restful service docker image
-$ docker build -t jinaai/executor_normalizer .
+$ docker build -t jinahub/hubble-normalizer .
 ```
 
 
@@ -46,5 +46,5 @@ $ executor_manager sandbox deploy --executor EXECUTOR_NAME
 
 ```
 # access docs via http://127.0.0.1:8888/docs
-$ docker run -it --rm -p 8888:8888 -v ${PWD}:/workspace jinaai/executor_normalizer
+$ docker run -it --rm -p 8888:8888 -v ${PWD}:/workspace jinahub/hubble-normalizer
 ```
