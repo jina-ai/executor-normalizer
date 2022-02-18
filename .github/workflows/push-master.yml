@@ -21,4 +21,4 @@ jobs:
     - name: semver-releaser
       uses: heyvito/semver-releaser@v0.0.8
       with:
-        github-token: ${{ secrets.JINA_DEV_BOT }}
+        github-token: ${{ secrets.GITHUB_TOKEN }}
