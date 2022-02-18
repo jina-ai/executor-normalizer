@@ -1,0 +1,21 @@
+name: Release and tag
+
+on:
+  push:
+    branches: [ master ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [16.x]
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: semver-releaser
+      uses: heyvito/semver-releaser@v0.0.8
+      with:
+        github-token: ${{ secrets.JINA_DEV_BOT }}
