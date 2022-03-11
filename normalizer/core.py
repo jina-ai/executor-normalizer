@@ -164,6 +164,7 @@ def _inspect_requests(element: ast.FunctionDef, lines: List[str]) -> Optional[st
 
 def inspect_executors(
     py_modules: List['pathlib.Path'],
+    class_name: str,
 ) -> List[Tuple[str, str, Optional[str], Tuple, List[Tuple]]]:
     def _inspect_class_defs(tree):
         return [o for o in ast.walk(tree) if isinstance(o, ast.ClassDef)]
@@ -176,6 +177,9 @@ def inspect_executors(
             lines = fin.readlines()
 
             for class_def in _inspect_class_defs(tree):
+                if class_name != class_def.name:
+                    continue
+
                 base_names = []
                 for base_class in class_def.bases:
                     # if the class looks like class MyExecutor(Executor)
@@ -381,22 +385,15 @@ def normalize(
     if config_path.exists():
         config = yaml.safe_load(open(config_path, 'r'))
         try:
-            py_list: List[str] = config['metas']['py_modules']
+            class_name: str = config['jtype']
         except Exception as ex:
-            raise IllegalExecutorError
+            raise ex
 
-        py_path_list = []
-        for py in py_list:
-            path = work_path / py
-            py_path_list.append(path)
-
-        if len(py_path_list) == 0:
-            raise IllegalExecutorError
-
-        py_glob = py_path_list
+        if class_name is None:
+            raise Exception('Not found jtype in config.yml')
 
     # inspect executor
-    executors = inspect_executors(py_glob)
+    executors = inspect_executors(py_glob, class_name)
     if len(executors) == 0:
         raise ExecutorNotFoundError
     if len(executors) > 1:
