@@ -1,6 +1,7 @@
 import ast
 import re
 import pathlib
+import yaml
 from typing import Dict, List, Tuple, Optional
 
 from loguru import logger
@@ -377,7 +378,22 @@ def normalize(
     # if not requirements_path.exists():
     #     requirements_path.touch()
 
-    # manifest = load_manifest(manifest_path)
+    if config_path.exists():
+        config = yaml.safe_load(open(config_path, 'r'))
+        try:
+            py_list: List[str] = config['metas']['py_modules']
+        except Exception as ex:
+            raise IllegalExecutorError
+
+        py_path_list = []
+        for py in py_list:
+            path = work_path / py
+            py_path_list.append(path)
+
+        if len(py_path_list) == 0:
+            raise IllegalExecutorError
+
+        py_glob = py_path_list
 
     # inspect executor
     executors = inspect_executors(py_glob)
@@ -421,10 +437,10 @@ def normalize(
 
     if not config_path.exists():
         try:
-            py_moduels = order_py_modules(py_glob, work_path)
+            py_modules = order_py_modules(py_glob, work_path)
         except Exception as ex:
             raise DependencyError
-        py_modules = [f'{p.relative_to(work_path)}' for p in py_moduels]
+        py_modules = [f'{p.relative_to(work_path)}' for p in py_modules]
 
         # render config.yml content
         template = get_config_template()
