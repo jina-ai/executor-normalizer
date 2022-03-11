@@ -177,8 +177,9 @@ def inspect_executors(
             lines = fin.readlines()
 
             for class_def in _inspect_class_defs(tree):
-                if class_name != class_def.name:
-                    continue
+                if class_name:
+                    if class_name != class_def.name:
+                        continue
 
                 base_names = []
                 for base_class in class_def.bases:
@@ -382,6 +383,7 @@ def normalize(
     # if not requirements_path.exists():
     #     requirements_path.touch()
 
+    class_name = None
     if config_path.exists():
         config = yaml.safe_load(open(config_path, 'r'))
         try:
