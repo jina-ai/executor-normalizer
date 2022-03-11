@@ -421,10 +421,10 @@ def normalize(
 
     if not config_path.exists():
         try:
-            py_moduels = order_py_modules(py_glob, work_path)
+            py_modules = order_py_modules(py_glob, work_path)
         except Exception as ex:
             raise DependencyError
-        py_modules = [f'{p.relative_to(work_path)}' for p in py_moduels]
+        py_modules = [f'{p.relative_to(work_path)}' for p in py_modules]
 
         # render config.yml content
         template = get_config_template()
