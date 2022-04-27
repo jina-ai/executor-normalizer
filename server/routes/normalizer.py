@@ -38,7 +38,9 @@ def normalize(
         result['success'] = False
         if isinstance(ex, excepts.ExecutorNotFoundError):
             result['code'] = ErrorCode.ExecutorNotFound.value
-            result['message'] = 'None of executor can be found!'
+            result['message'] = """We can not discover any Executor in your bundle. This is often due to one of the following errors:
+    The bundle did not contain any valid executor.
+    The config.yml's jtype is mismatched with the actual Executor class name."""
         elif isinstance(ex, excepts.ExecutorExistsError):
             result['code'] = ErrorCode.ExecutorExists.value
             result[
