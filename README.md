@@ -13,9 +13,9 @@ Normalize Executor packages uploaded by users.
 - Identify **Illegal** executor
 - Support **toplogical sort of py-modules** based on theire dependency relations
 
-## Sandbox
+## Generator
 
-Deploy sandbox for Executors.
+Generator Kubernetes/Docker Compose/JCloud yaml configuration.
 
 ## Setup
 
@@ -38,7 +38,7 @@ $ make init
 
 ```bash
 $ executor_manager normalize /path/to/executor_folder -v
-$ executor_manager sandbox deploy --executor EXECUTOR_NAME
+$ executor_manager generate Hello/latest
 ```
 
 - Deploy a service via Docker container

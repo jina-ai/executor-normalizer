@@ -4,7 +4,7 @@ import click
 from jina import __version__ as __jina_version__
 from server import __version__
 from normalizer.core import normalize as normalizer_normalize
-from sandbox.core import deploy as sandbox_deploy
+from generator.core import generate as generate_yaml
 
 @click.group()
 @click.version_option(
@@ -21,17 +21,19 @@ def cli():
 def normalize(path, jina_version, verbose):
     normalizer_normalize(pathlib.Path(path), meta={'jina': jina_version}, verbose=verbose)
 
-@cli.group()
-def sandbox():
-    pass
+@cli.command()
+@click.argument('executor')
+@click.option('--type', type=click.Choice(['k8s', 'docker_compose', 'jcloud']), default='k8s', help='Specify the deployment type.')
+def generate(executor, type):
+    """
+    Generate corresponding deployment files for EXECUTOR.
 
-@sandbox.command()
-@click.option('--executor', type=str, required=True)
-@click.option('--endpoints', type=str, multiple=True)
-@click.option('--replicas', type=int, default=1)
-def deploy(executor, endpoints, replicas):
-    """Deploy Jina Executor Sandbox"""
-    sandbox_deploy(executor, endpoints, replicas)
+    EXECUTOR format should be in the form of:
+    <executor_name>[/<executor_tag>]
+    For example: `Hello/latest` or just `Hello`
+    """
+
+    return generate_yaml(executor, type)
 
 
 if __name__ == "__main__":

@@ -5,8 +5,8 @@ from starlette.requests import Request
 from loguru import logger
 
 from server.errors import ErrorCode
-from sandbox.models import PackagePayload, DeployResult
-from sandbox.core import deploy as sandbox_deploy
+from generator.models import PackagePayload, DeployResult
+from generator.core import deploy as sandbox_deploy
 
 router = APIRouter()
 

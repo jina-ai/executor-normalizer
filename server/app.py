@@ -5,7 +5,7 @@ from starlette.config import Config
 import server
 
 from server.routes.normalizer import router as normalizer_router
-from server.routes.sandbox import router as sandbox_router
+from server.routes.generator import router as generator_router
 
 APP_VERSION = server.__version__
 APP_NAME = 'Jina Hubble Python Services'
@@ -21,7 +21,7 @@ def create_app() -> FastAPI:
     api_router = APIRouter()
 
     api_router.include_router(normalizer_router, tags=['normalizer'], prefix='/normalizer/api/v1')
-    api_router.include_router(sandbox_router, tags=['sandbox'], prefix='/sandbox/api/v1')
+    api_router.include_router(generator_router, tags=['generator'], prefix='/generator/api/v1')
 
     fast_app.include_router(api_router)
 

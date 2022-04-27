@@ -51,4 +51,4 @@ env:
 
 ## Install package
 init:
-	pip install --no-cache-dir .
+	pip install --no-cache-dir -e .
