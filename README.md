@@ -20,15 +20,14 @@ Deploy sandbox for Executors.
 ## Setup
 
 ```bash
-
 $ git clone https://github.com/jina-ai/executor-normalizer.git
 $ cd executor-normalizer
 
-# Option 1: install as a command tool
-$ pip install .
+# Make a venv in local dir
+$ make env
 
-# Option 2: build restful service docker image
-$ docker build -t jinahub/hubble-normalizer .
+# Install as a CLI
+$ make init
 ```
 
 
