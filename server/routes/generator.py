@@ -1,49 +1,32 @@
 import datetime
-from fastapi import APIRouter
+from fastapi import APIRouter, BackgroundTasks
 from fastapi.encoders import jsonable_encoder
+from fastapi.responses import FileResponse
 from starlette.requests import Request
 from loguru import logger
 
-from server.errors import ErrorCode
-from generator.models import PackagePayload, DeployResult
-from generator.core import deploy as sandbox_deploy
+from generator.models import PackagePayload
+from generator.core import generate as generate_yaml, clean as clean_yaml
 
 router = APIRouter()
 
-
-@router.post('/')
-def deploy(
+@router.post('/generate', response_class=FileResponse)
+async def generate(
     request: Request,
-    block_data: PackagePayload = None,
+    block_data: PackagePayload,
+    background_tasks: BackgroundTasks,
 ):
     now = datetime.datetime.now()
 
-    result = {
-        'success': True,
-        'code': 200,
-        'data': None,
-        'message': 'Deployed successfully!'
-    }
-
-    try:
-        data = sandbox_deploy(block_data.executor, block_data.endpoints, block_data.replicas)
-        result['data'] = data
-    except Exception as ex:
-        result['success'] = False
-        result['code'] = ErrorCode.Others.value
-        result['message'] = str(ex)
+    path = generate_yaml(block_data.executor, block_data.type)
+    # Remove the file after the request is done
+    background_tasks.add_task(clean_yaml, path)
 
     logger.info(
         {
             'payload': jsonable_encoder(block_data),
             'time_at': now.strftime('%Y-%m-%d %H:%M:%S'),
-            'response': result,
         }
     )
 
-    return DeployResult(
-        success = result['success'],
-        code = result['code'],
-        message = result['message'],
-        data = result['data']
-    )
+    return path
