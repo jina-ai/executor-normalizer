@@ -4,8 +4,10 @@ import shutil
 from jina import Flow
 from loguru import logger
 
-def generate(executor: str, type: str):
-    f = Flow().add(
+def generate(executor: str, type: str, protocol: str):
+    f = Flow(
+        protocol=protocol,
+    ).add(
         uses=f'jinahub+docker://{executor}',
     )
 
@@ -28,6 +30,8 @@ def generate(executor: str, type: str):
         with open(temp_file_path, 'w', encoding='utf-8') as f:
             f.write(
                 f'''jtype: Flow
+with:
+    protocol: {protocol}
 executors:
   - name: {executor}
     uses: jinahub+docker://{executor}'''

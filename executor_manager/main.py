@@ -24,7 +24,8 @@ def normalize(path, jina_version, verbose):
 @cli.command()
 @click.argument('executor')
 @click.option('--type', type=click.Choice(['k8s', 'docker_compose', 'jcloud']), default='k8s', help='Specify the deployment type.')
-def generate(executor, type):
+@click.option('--protocol', type=click.Choice(['http', 'grpc', 'websocket']), default='http', help='Specify the protocol.')
+def generate(executor, type, protocol):
     """
     Generate corresponding deployment files for EXECUTOR.
 
@@ -33,7 +34,7 @@ def generate(executor, type):
     For example: `Hello/latest` or just `Hello`
     """
 
-    return generate_yaml(executor, type)
+    return generate_yaml(executor, type, protocol)
 
 
 if __name__ == "__main__":

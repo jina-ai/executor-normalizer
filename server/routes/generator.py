@@ -18,7 +18,11 @@ async def generate(
 ):
     now = datetime.datetime.now()
 
-    (path, file_type) = generate_yaml(block_data.executor, block_data.type)
+    (path, file_type) = generate_yaml(
+        block_data.executor,
+        block_data.type,
+        block_data.protocol
+    )
     # Remove the file after the request is done
     background_tasks.add_task(clean_yaml, path)
 
