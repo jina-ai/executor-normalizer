@@ -1,5 +1,8 @@
 # Hubble Python Services
-Hubble-related http services that rely on Python and Jina Core. It contains several components **Normalizer** and **Sandbox**.
+Hubble-related http services that rely on Python and Jina Core. It contains several components:
+
+- Normalizer
+- Generator
 
 ## Normalizer
 
@@ -11,11 +14,11 @@ Normalize Executor packages uploaded by users.
 - Complete `Dockerfile`
 - Identify `Executor` class name
 - Identify **Illegal** executor
-- Support **toplogical sort of py-modules** based on theire dependency relations
+- Support **topological sort of py-modules** based on there dependency relations
 
 ## Generator
 
-Generator Kubernetes/Docker Compose/JCloud yaml configuration.
+Generate Kubernetes/Docker Compose/JCloud yaml configuration.
 
 ## Setup
 
@@ -34,16 +37,20 @@ $ make init
 
 ## Usage
 
--  Usage as a command tool for ease-of-testing
+### Command line interface
 
 ```bash
 $ executor_manager normalize /path/to/executor_folder -v
-$ executor_manager generate Hello/latest
+$ executor_manager generate Hello/latest --type k8s --protocol http
 ```
 
-- Deploy a service via Docker container
+### Http service
+
+First, we need to build a docker image based on codebase. 
+
+`docker build -t local-hubble-normalizer .`
 
 ```
 # access docs via http://127.0.0.1:8888/docs
-$ docker run -it --rm -p 8888:8888 -v ${PWD}:/workspace jinahub/hubble-normalizer
+$ docker run -it --rm -p 8888:8888 -v ${PWD}:/workspace local-hubble-normalizer
 ```
