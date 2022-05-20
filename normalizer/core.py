@@ -2,7 +2,7 @@ import ast
 import re
 import pathlib
 import yaml
-from typing import Dict, List, Tuple, Optional
+from typing import Dict, List, Tuple, Optional, Sequence
 
 from loguru import logger
 from jina.helper import colored
@@ -163,7 +163,7 @@ def _inspect_requests(element: ast.FunctionDef, lines: List[str]) -> Optional[st
 
 
 def inspect_executors(
-    py_modules: List['pathlib.Path'],
+    py_modules: Sequence['pathlib.Path'],
     class_name: str,
 ) -> List[Tuple[str, str, Optional[str], Tuple, List[Tuple]]]:
     def _inspect_class_defs(tree):
@@ -351,6 +351,21 @@ def normalize(
     py_glob = list(work_path.glob('*.py')) + list(work_path.glob('executor/*.py'))
     test_glob = list(work_path.glob('tests/test_*.py'))
 
+    class_name = None
+    if config_path.exists():
+        config = yaml.safe_load(open(config_path, 'r'))
+        try:
+            class_name: str = config['jtype']
+        except Exception as ex:
+            raise ex
+
+        if class_name is None:
+            raise Exception('Not found jtype in config.yml')
+
+        py_glob += [pathlib.Path(p) for p in config['py_modules']]
+
+    py_glob = list(set(py_glob))
+
     completeness = {
         'Dockerfile': dockerfile_path,
         'manifest.yml': manifest_path,
@@ -382,17 +397,6 @@ def normalize(
 
     # if not requirements_path.exists():
     #     requirements_path.touch()
-
-    class_name = None
-    if config_path.exists():
-        config = yaml.safe_load(open(config_path, 'r'))
-        try:
-            class_name: str = config['jtype']
-        except Exception as ex:
-            raise ex
-
-        if class_name is None:
-            raise Exception('Not found jtype in config.yml')
 
     # inspect executor
     executors = inspect_executors(py_glob, class_name)
