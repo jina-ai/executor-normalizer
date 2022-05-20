@@ -362,7 +362,10 @@ def normalize(
         if class_name is None:
             raise Exception('Not found jtype in config.yml')
 
-        py_glob += [pathlib.Path(p) for p in config['py_modules']]
+        py_modules = config.get('metas', {}).get('py_modules', None)
+
+        if isinstance(py_modules, list):
+            py_glob += [work_path.joinpath(p) for p in py_modules]
 
     py_glob = list(set(py_glob))
 
