@@ -135,3 +135,18 @@ shell/jina-wizard.sh
 
 # test with config in resources
 tests/integration/crud/simple/simple_indexer/
+tests/cases/executor_1/__jina__.Dockerfile
+tests/cases/executor_1/config.yml
+tests/cases/executor_1/Dockerfile
+tests/cases/executor_2/__jina__.Dockerfile
+tests/cases/executor_2/config.yml
+tests/cases/executor_2/Dockerfile
+tests/cases/executor_3/__jina__.Dockerfile
+tests/cases/executor_3/config.yml
+tests/cases/executor_3/Dockerfile
+tests/cases/executor_4/__jina__.Dockerfile
+tests/cases/executor_4/Dockerfile
+tests/cases/nested/__jina__.Dockerfile
+tests/cases/nested/config.yml
+tests/cases/nested/Dockerfile
+

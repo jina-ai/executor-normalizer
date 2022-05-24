@@ -164,7 +164,7 @@ def _inspect_requests(element: ast.FunctionDef, lines: List[str]) -> Optional[st
 
 def inspect_executors(
     py_modules: Sequence['pathlib.Path'],
-    class_name: str,
+    class_name: Optional[str] = None,
 ) -> List[Tuple[str, str, Optional[str], Tuple, List[Tuple]]]:
     def _inspect_class_defs(tree):
         return [o for o in ast.walk(tree) if isinstance(o, ast.ClassDef)]
@@ -347,8 +347,6 @@ def normalize(
     readme_path = work_path / 'README.md'
     requirements_path = work_path / 'requirements.txt'
     gpu_dockerfile_path = work_path / 'Dockerfile.gpu'
-
-    py_glob = list(work_path.glob('*.py')) + list(work_path.glob('executor/*.py'))
     test_glob = list(work_path.glob('tests/test_*.py'))
 
     class_name = None
@@ -365,7 +363,10 @@ def normalize(
         py_modules = config.get('metas', {}).get('py_modules', None)
 
         if isinstance(py_modules, list):
+            py_glob = []
             py_glob += [work_path.joinpath(p) for p in py_modules]
+    else:
+        py_glob = list(work_path.glob('*.py')) + list(work_path.glob('executor/*.py'))
 
     py_glob = list(set(py_glob))
 

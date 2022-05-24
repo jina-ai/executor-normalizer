@@ -1,0 +1,4 @@
+jtype: Executor4
+metas:
+  py_modules:
+    - foo.py
