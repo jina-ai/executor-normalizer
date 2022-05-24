@@ -1,18 +1,7 @@
-from os import path
-
 from setuptools import find_packages, setup
 
-try:
-    pkg_name = 'executor-normalizer'
-    pkg_slug = 'normalizer'
-    libinfo_py = path.join('server', '__init__.py')
-    libinfo_content = open(libinfo_py, 'r', encoding='utf8').readlines()
-    version_line = [l.strip() for l in libinfo_content if l.startswith('__version__')][
-        0
-    ]
-    exec(version_line)  # produce __version__
-except FileNotFoundError:
-    __version__ = '0.0.0'
+pkg_name = 'executor-normalizer'
+pkg_slug = 'normalizer'
 
 with open('README.md', 'r') as fh:
     long_description = fh.read()
@@ -32,7 +21,6 @@ setup(
     packages=find_packages(
         exclude=['*.tests', '*.tests.*', 'tests.*', 'tests', 'test', 'docs']
     ),
-    version=__version__,
     include_package_data=True,
     package_data={'normalizer': ['resources/*', 'resources/**/*']},
     author='felix.wang',
