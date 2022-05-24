@@ -1,5 +1,4 @@
-from platform import version
-from typing import List, Dict, Optional, Tuple
+from typing import List, Dict, Tuple
 from pathlib import Path
 from packaging.version import parse
 
@@ -12,6 +11,12 @@ Package = namedtuple('Package', ['name', 'version'])
 
 
 def get_dep_tools(pkg: str):
+    """
+    Get the dependency tools for a given package.
+
+    :param pkg: the package to get the tools for
+    :return: list of dependency tools
+    """
     tool_deps = []
     if 'git+http' in pkg.name:
         tool_deps.append('git')
@@ -19,6 +24,12 @@ def get_dep_tools(pkg: str):
 
 
 def get_baseimage(pkg: str) -> Tuple[str, str]:
+    """
+    Get the base image name and tag for a given package.
+
+    :param pkg: the package to get the base image for
+    :return: the base image name and tag
+    """
     # base_image = None
     # version_tag = None
     # if pkg.name in ['tensorflow', 'tensorflow-cpu', 'tensorflow-gpu']:
@@ -50,6 +61,15 @@ def get_all_imports(
     extra_ignore_dirs=[],
     follow_links=True,
 ):
+    """
+    Get all imports from a given file.
+
+    :param path: the file to get imports from
+    :param encoding: the encoding of the file
+    :param extra_ignore_dirs: extra ignore dirs
+    :param follow_links: follow links
+    :return: list of imports
+    """
     return pipreqs.get_all_imports(
         str(path),
         encoding=encoding,
@@ -59,6 +79,12 @@ def get_all_imports(
 
 
 def get_import_info(import_name):
+    """
+    Get the PyPI info for a given import name.
+
+    :param import_name: the import name to get the info for
+    :return: the PyPI info
+    """
     try:
         with PyPISimple() as client:
             result = client.get_project_page(import_name)
@@ -78,15 +104,20 @@ def get_import_info(import_name):
 
 def get_pkg_names(pkgs):
     """Get PyPI package names from a list of imports.
-    Args:
-        pkgs (List[str]): List of import names.
-    Returns:
-        List[str]: The corresponding PyPI package names.
+
+    :param pkgs: list of import names
+    :return: corresponding PyPI package names
     """
     return pipreqs.get_pkg_names(pkgs)
 
 
 def dump_requirements(path: 'Path', imports: List[Dict] = []):
+    """
+    Dump a requirements formatted file.
+
+    :param path: the file to dump
+    :param imports: the list of imports to dump
+    """
     with path.open('w') as f:
 
         for m in imports:

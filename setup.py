@@ -21,6 +21,7 @@ setup(
     packages=find_packages(
         exclude=['*.tests', '*.tests.*', 'tests.*', 'tests', 'test', 'docs']
     ),
+    version='0.0.0',
     include_package_data=True,
     package_data={'normalizer': ['resources/*', 'resources/**/*']},
     author='felix.wang',

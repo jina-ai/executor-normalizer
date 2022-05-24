@@ -49,6 +49,53 @@ env:
 	. .venv/bin/activate
 	pip install -U pip
 
+## Install pre-commit hooks
+pre-commit:
+	pip install pre-commit
+	pre-commit install
+
 ## Install package
 init:
 	pip install --no-cache-dir -e ".[test]"
+
+# ---------------------------------------------------------------- Test related targets
+
+PYTEST_ARGS = --show-capture no --full-trace --verbose --cov normalizer --cov generator --cov-report xml
+
+## Run tests
+test:
+	pytest $(PYTEST_ARGS)
+
+# ---------------------------------------------------------- Code style related targets
+
+SRC_CODE = normalizer/ generator/ tests/
+
+## Run the flake linter
+flake:
+	flake8 $(SRC_CODE)
+
+## Run the black formatter
+black:
+	black $(SRC_CODE)
+
+## Dry run the black formatter
+black-check:
+	black --check $(SRC_CODE)
+
+## Run the isort import formatter
+isort:
+	isort $(SRC_CODE)
+
+## Dry run the isort import formatter
+isort-check:
+	isort --check $(SRC_CODE)
+
+## Run the mypy static type checker
+mypy:
+	mypy $(SRC_CODE)
+
+## Format source code
+format: black isort
+
+## Check code style
+style: flake black-check isort-check # mypy

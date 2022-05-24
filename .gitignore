@@ -132,6 +132,7 @@ shell/jina-wizard.sh
 # IntelliJ IDEA
 *.iml
 .idea
+.vscode
 
 # test with config in resources
 tests/integration/crud/simple/simple_indexer/
@@ -149,4 +150,3 @@ tests/cases/executor_4/Dockerfile
 tests/cases/nested/__jina__.Dockerfile
 tests/cases/nested/config.yml
 tests/cases/nested/Dockerfile
-
