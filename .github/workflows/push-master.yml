@@ -21,7 +21,7 @@ jobs:
       - name: Install requirements
         run: make init
       - name: Run tests
-        run: pytest --cov normalizer/ --cov generator/  --cov-report xml
+        run: pytest --cov=normalizer --cov=generator  --cov-report=xml
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v2
         with:
