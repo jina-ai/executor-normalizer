@@ -1,4 +1,3 @@
-import sys
 from os import path
 
 from setuptools import find_packages, setup
@@ -46,12 +45,14 @@ setup(
     setup_requires=[
         'setuptools>=18.0',
     ],
-    tests_require=[
-        'pytest',
-        'pytest-runner',
-        'black==20.8b1',
-        'isort==4.3.21',
-    ],
+    extras_require={
+        'test': [
+            'pytest',
+            'pytest-runner',
+            'black==22.3.0',
+            'isort',
+        ],
+    },
     python_requires='>=3.6',
     entry_points={
         'console_scripts': [
