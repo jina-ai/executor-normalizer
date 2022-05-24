@@ -48,8 +48,16 @@ setup(
     extras_require={
         'test': [
             'pytest',
-            'pytest-runner',
+            'pytest-timeout',
+            'pytest-mock',
+            'pytest-cov',
+            'pytest-repeat',
+            'pytest-reraise',
+            'mock',
+            'pytest-custom_exit_code',
             'black==22.3.0',
+            'jina',
+            'flake8',
             'isort',
         ],
     },
