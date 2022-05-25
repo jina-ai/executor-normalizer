@@ -1,4 +1,4 @@
 jina==2.0.2
 numpy==1.21.0
-tensorflow==2.6.0rc0
+tensorflow==2.6.4
 torch==1.9.0
