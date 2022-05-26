@@ -25,6 +25,7 @@ from .helper import (
     get_config_template,
     get_imports,
     resolve_import,
+    convert_from_to_path,
     topological_sort,
     choose_jina_version,
     get_jina_image_tag,
@@ -365,6 +366,22 @@ def normalize(
         if isinstance(py_modules, list):
             py_glob = []
             py_glob += [work_path.joinpath(p) for p in py_modules]
+
+            # extend the path from import statement
+            for filepath in py_glob:
+                with filepath.open() as fin:
+                    tree = ast.parse(fin.read(), filename=str(filepath))
+                    fin.seek(0)
+                    lines = fin.readlines()
+
+                    for o in ast.walk(tree):
+                        if isinstance(o, ast.ImportFrom):
+                            for alias in o.names:
+                                if alias.name == class_name:
+                                    from_state = list(lines[o.lineno - 1].split(' '))[1]
+                                    module_py = filepath.parent.joinpath(convert_from_to_path(from_state))
+                                    if module_py.exists():
+                                        py_glob.append(module_py)
     else:
         py_glob = list(work_path.glob('*.py')) + list(work_path.glob('executor/*.py'))
 
