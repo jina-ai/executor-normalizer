@@ -5,40 +5,20 @@ on:
 
 
 jobs:
-  core-test:
+  test:
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        python-version: [3.8]
+
     steps:
       - uses: actions/checkout@v2
-      - name: Set up Python ${{ matrix.python-version }}
+      - name: Set up Python 3.9
         uses: actions/setup-python@v2
         with:
-          python-version: ${{ matrix.python-version }}
-      - name: Prepare enviroment
-        run: |
-          python -m pip install --upgrade pip
-          python -m pip install pytest pytest-mock
-          python -m pip install -r requirements.txt
-      - name: Test
-        id: test
-        run: |
-          pytest -v -s tests
-        timeout-minutes: 30
-
-
-  # just for blocking the merge until all parallel core-test are successful
-  success-all-test:
-    needs: [core-test]
-    if: always()
-    runs-on: ubuntu-latest
-    steps:
-      - uses: technote-space/workflow-conclusion-action@v2
-      - name: Check Failure
-        if: env.WORKFLOW_CONCLUSION == 'failure'
-        run: exit 1
-      - name: Success
-        if: ${{ success() }}
-        run: echo "All Done"
+          python-version: 3.9
+      - name: Install requirements
+        run: make init
+      - name: Run tests
+        run: pytest --cov=normalizer --cov=generator  --cov-report=xml
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v2
+        with:
+          files: ./coverage.xml
