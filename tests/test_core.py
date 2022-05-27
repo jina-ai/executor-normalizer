@@ -3,7 +3,8 @@ from pathlib import Path
 import pytest
 
 from normalizer import deps, core
-from normalizer.models import ExecutorModel, FuncArgsModel, ArgModel
+from normalizer.models import ExecutorModel
+
 
 def test_inspect_dummy_execs():
     executors = core.inspect_executors(
@@ -55,17 +56,36 @@ def test_inspect_dummy_execs():
         ),
         (
             Path(__file__).parent / 'cases' / 'nested',
-            Path(__file__).parent / 'cases' / 'nested_executor.json',
-        )
+            Path(__file__).parent / 'cases' / 'nested.json',
+        ),
+        (
+            Path(__file__).parent / 'cases' / 'nested_2',
+            None,
+        ),
+        (
+            Path(__file__).parent / 'cases' / 'nested_3',
+            None,
+        ),
+        (
+            Path(__file__).parent / 'cases' / 'nested_4',
+            None,
+        ),
+        (
+            Path(__file__).parent / 'cases' / 'nested_5',
+            None,
+        ),
     ],
 )
 def test_get_executor_args(package_path, expected_path):
-    with open(expected_path, 'r') as fp:
-        expected_executor = ExecutorModel(**json.loads(fp.read()))
-        executor = core.normalize(package_path)
-        executor.hubble_score_metrics = expected_executor.hubble_score_metrics
-        executor.filepath = expected_executor.filepath
-        assert executor == expected_executor
+    if expected_path:
+        with open(expected_path, 'r') as fp:
+            expected_executor = ExecutorModel(**json.loads(fp.read()))
+            executor = core.normalize(package_path, dry_run=True)
+            executor.hubble_score_metrics = expected_executor.hubble_score_metrics
+            executor.filepath = expected_executor.filepath
+            assert executor == expected_executor
+    else:
+        core.normalize(package_path, dry_run=True)
 
 
 def test_prelude():

@@ -25,6 +25,7 @@ from .helper import (
     get_config_template,
     get_imports,
     resolve_import,
+    convert_from_to_path,
     topological_sort,
     choose_jina_version,
     get_jina_image_tag,
@@ -317,6 +318,7 @@ def normalize(
     work_path: 'pathlib.Path',
     meta: Dict = {'jina': '2'},
     env: Dict = {},
+    dry_run: bool = False,
     **kwargs,
 ) -> ExecutorModel:
     """Normalize the executor package.
@@ -324,6 +326,7 @@ def normalize(
     :param work_path: the executor folder where it located
     :param meta: the version info of the Jina to work with
     :param env: the environment variables the Jina works with
+    :param dry_run: if True, dry_run the file dumps
     """
 
     logger.debug(f'=> The executor repository is located at: {work_path}')
@@ -365,6 +368,24 @@ def normalize(
         if isinstance(py_modules, list):
             py_glob = []
             py_glob += [work_path.joinpath(p) for p in py_modules]
+
+            # extend the path from import statement
+            extended_path = None
+            for filepath in py_glob:
+                with filepath.open() as fin:
+                    tree = ast.parse(fin.read(), filename=str(filepath))
+                    fin.seek(0)
+                    lines = fin.readlines()
+                    for o in ast.walk(tree):
+                        if isinstance(o, ast.ImportFrom):
+                            for alias in o.names:
+                                if alias.name == class_name:
+                                    from_state = list(lines[o.lineno - 1].split(' '))[1]
+                                    extended_path = convert_from_to_path(from_state, base_dir=filepath.parent)
+                                    if extended_path:
+                                        py_glob.append(extended_path)
+                                        break
+
     else:
         py_glob = list(work_path.glob('*.py')) + list(work_path.glob('executor/*.py'))
 
@@ -453,9 +474,10 @@ def normalize(
         template = get_config_template()
         config_content = template.render(executor=executor, py_modules=py_modules)
 
-        # dump config.yml
-        with open(config_path, 'w') as f:
-            f.write(config_content)
+        if not dry_run:
+            # dump config.yml
+            with open(config_path, 'w') as f:
+                f.write(config_content)
 
     if requirements_path.exists():
         imports = [
@@ -534,8 +556,8 @@ def normalize(
             '--uses',
             f'{config_path.relative_to(work_path)}',
         ]
-
-        dockerfile.dump(dockerfile_path)
+        if not dry_run:
+            dockerfile.dump(dockerfile_path)
 
     entrypoint_value = dockerfile.entrypoint
 
@@ -545,6 +567,7 @@ def normalize(
     new_dockerfile.set_entrypoint(entrypoint_value)
 
     new_dockerfile_path = work_path / '__jina__.Dockerfile'
-    new_dockerfile.dump(new_dockerfile_path)
+    if not dry_run:
+        new_dockerfile.dump(new_dockerfile_path)
 
     return to_dto(executor, docstring, init, endpoints, filepath, hubble_score_metrics)
