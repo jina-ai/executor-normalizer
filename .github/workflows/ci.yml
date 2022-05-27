@@ -25,7 +25,7 @@ jobs:
       - name: Test
         id: test
         run: |
-          pytest --suppress-no-test-exit-code -v -s tests
+          pytest -v -s tests
         timeout-minutes: 30
 
 
