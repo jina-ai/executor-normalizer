@@ -5,6 +5,7 @@ import pytest
 from normalizer import deps, core
 from normalizer.models import ExecutorModel, FuncArgsModel, ArgModel
 
+
 def test_inspect_dummy_execs():
     executors = core.inspect_executors(
         [Path(__file__).parent / 'cases' / 'simple_case' / 'dummy_exec.py']

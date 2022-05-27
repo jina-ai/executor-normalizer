@@ -382,9 +382,10 @@ def normalize(
                                 if alias.name == class_name:
                                     from_state = list(lines[o.lineno - 1].split(' '))[1]
                                     extended_path = convert_from_to_path(from_state, base_dir=filepath.parent)
-                                    if extended_path: break
+                                    if extended_path:
+                                        py_glob.append(extended_path)
+                                        break
 
-            py_glob.append(extended_path)
     else:
         py_glob = list(work_path.glob('*.py')) + list(work_path.glob('executor/*.py'))
 

@@ -1,4 +1,7 @@
+from pathlib import Path
 from normalizer import helper
+
+cur_dir = Path(__file__).parent
 
 
 def test_choose_jina_version(mocker):
@@ -10,5 +13,5 @@ def test_choose_jina_version(mocker):
 
 
 def test_convert_from_path():
-    assert helper.convert_from_to_path('..a.b.c') == '../a/b/c.py'
-    assert helper.convert_from_to_path('a.b.c') == 'a/b/c.py'
+    assert helper.convert_from_to_path('..deps', base_dir=cur_dir / 'cases/nested_3/executors')
+    assert helper.convert_from_to_path('deps', base_dir= cur_dir / 'cases/nested_3')
