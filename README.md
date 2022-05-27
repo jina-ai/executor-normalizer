@@ -1,4 +1,7 @@
 # Hubble Python Services
+
+[![codecov](https://codecov.io/gh/jina-ai/executor-normalizer/branch/main/graph/badge.svg?token=qS6ukBVDwL)](https://codecov.io/gh/jina-ai/executor-normalizer)
+
 Hubble-related http services that rely on Python and Jina Core. It contains several components:
 
 - Normalizer
@@ -46,7 +49,7 @@ $ executor_manager generate Hello/latest --type k8s --protocol http
 
 ### Http service
 
-First, we need to build a docker image based on codebase. 
+First, we need to build a docker image based on codebase.
 
 `docker build -t local-hubble-normalizer .`
 
