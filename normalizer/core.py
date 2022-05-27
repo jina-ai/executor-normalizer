@@ -389,7 +389,6 @@ def normalize(
     else:
         py_glob = list(work_path.glob('*.py')) + list(work_path.glob('executor/*.py'))
 
-    print(f'py_glob: {py_glob}')
     py_glob = list(set(py_glob))
 
     completeness = {
