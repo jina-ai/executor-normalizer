@@ -60,21 +60,32 @@ def test_inspect_dummy_execs():
         ),
         (
             Path(__file__).parent / 'cases' / 'nested_2',
-            Path(__file__).parent / 'cases' / 'nested_2.json',
+            None,
         ),
         (
             Path(__file__).parent / 'cases' / 'nested_3',
-            Path(__file__).parent / 'cases' / 'nested_3.json',
+            None,
+        ),
+        (
+            Path(__file__).parent / 'cases' / 'nested_4',
+            None,
+        ),
+        (
+            Path(__file__).parent / 'cases' / 'nested_5',
+            None,
         ),
     ],
 )
 def test_get_executor_args(package_path, expected_path):
-    with open(expected_path, 'r') as fp:
-        expected_executor = ExecutorModel(**json.loads(fp.read()))
-        executor = core.normalize(package_path, dry_run=True)
-        executor.hubble_score_metrics = expected_executor.hubble_score_metrics
-        executor.filepath = expected_executor.filepath
-        assert executor == expected_executor
+    if expected_path:
+        with open(expected_path, 'r') as fp:
+            expected_executor = ExecutorModel(**json.loads(fp.read()))
+            executor = core.normalize(package_path, dry_run=True)
+            executor.hubble_score_metrics = expected_executor.hubble_score_metrics
+            executor.filepath = expected_executor.filepath
+            assert executor == expected_executor
+    else:
+        core.normalize(package_path, dry_run=True)
 
 
 def test_prelude():
