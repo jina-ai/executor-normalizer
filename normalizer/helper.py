@@ -7,14 +7,21 @@ from importlab.resolve import convert_to_path
 from . import __resources_path__
 
 
-def convert_from_to_path(from_state):
+def convert_from_to_path(from_state, base_dir: 'pathlib.Path' = pathlib.Path('.')):
     for i, c in enumerate(from_state):
         if c != '.':
             break
+
     if i > 0:
-        return from_state[:i] + '/' + from_state[i:].replace('.', '/') + '.py'
+        path_name = from_state[:i] + '/' + from_state[i:].replace('.', '/')
     else:
-        return from_state.replace('.', '/') + '.py'
+        path_name = from_state.replace('.', '/')
+
+    if base_dir.joinpath(path_name + '.py').exists():
+        return base_dir.joinpath(path_name + '.py')
+    elif base_dir.joinpath(path_name + '/__init__.py').exists():
+        return base_dir.joinpath(path_name + '/__init__.py')
+    return None
 
 def load_manifest(yaml_path: 'pathlib.Path') -> Dict:
     """Load manifest of executor from YAML file."""
