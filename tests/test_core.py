@@ -3,7 +3,7 @@ from pathlib import Path
 import pytest
 
 from normalizer import deps, core
-from normalizer.models import ExecutorModel, FuncArgsModel, ArgModel
+from normalizer.models import ExecutorModel
 
 
 def test_inspect_dummy_execs():
@@ -56,14 +56,22 @@ def test_inspect_dummy_execs():
         ),
         (
             Path(__file__).parent / 'cases' / 'nested',
-            Path(__file__).parent / 'cases' / 'nested_executor.json',
-        )
+            Path(__file__).parent / 'cases' / 'nested.json',
+        ),
+        (
+            Path(__file__).parent / 'cases' / 'nested_2',
+            Path(__file__).parent / 'cases' / 'nested_2.json',
+        ),
+        (
+            Path(__file__).parent / 'cases' / 'nested_3',
+            Path(__file__).parent / 'cases' / 'nested_3.json',
+        ),
     ],
 )
 def test_get_executor_args(package_path, expected_path):
     with open(expected_path, 'r') as fp:
         expected_executor = ExecutorModel(**json.loads(fp.read()))
-        executor = core.normalize(package_path)
+        executor = core.normalize(package_path, dry_run=True)
         executor.hubble_score_metrics = expected_executor.hubble_score_metrics
         executor.filepath = expected_executor.filepath
         assert executor == expected_executor
