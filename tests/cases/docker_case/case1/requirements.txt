@@ -1,4 +1,4 @@
 jina==2.0.2
-numpy==1.21.0
+numpy==1.22.0
 tensorflow>=2.7.1
 torch==1.9.0
