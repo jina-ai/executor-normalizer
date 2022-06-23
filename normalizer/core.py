@@ -367,7 +367,6 @@ def normalize(
         py_modules = config.get('metas', {}).get('py_modules', None)
 
         if isinstance(py_modules, list):
-            py_glob = []
             py_glob += [work_path.joinpath(p) for p in py_modules]
 
             # extend the path from import statement
