@@ -353,6 +353,7 @@ def normalize(
     test_glob = list(work_path.glob('tests/test_*.py'))
 
     class_name = None
+    py_glob = []
     if config_path.exists():
         config = yaml.safe_load(open(config_path, 'r'))
         try:
@@ -366,7 +367,6 @@ def normalize(
         py_modules = config.get('metas', {}).get('py_modules', None)
 
         if isinstance(py_modules, list):
-            py_glob = []
             py_glob += [work_path.joinpath(p) for p in py_modules]
 
             # extend the path from import statement
