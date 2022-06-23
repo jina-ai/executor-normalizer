@@ -353,6 +353,7 @@ def normalize(
     test_glob = list(work_path.glob('tests/test_*.py'))
 
     class_name = None
+    py_glob = []
     if config_path.exists():
         config = yaml.safe_load(open(config_path, 'r'))
         try:
