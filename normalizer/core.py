@@ -40,6 +40,14 @@ EndpointInspectionType = Tuple[str, ArgType, KWArgType, str, str]
 
 
 def order_py_modules(py_modules: List['pathlib.Path'], work_path: 'pathlib.Path'):
+    """
+    Order the py_modules in the right order to be imported
+
+    :param py_modules: list of py_modules to be imported
+    :param work_path: path to the working directory
+
+    :return: ordered list of py_modules
+    """
 
     dependencies = {x: [] for x in py_modules}
 
@@ -107,6 +115,12 @@ def _get_args_kwargs(
 def _inspect_requests(element: ast.FunctionDef, lines: List[str]) -> Optional[str]:
     """
     Returns requests inspection details about a method
+
+    :param element: Function definition
+    :param lines: Lines of the file which the function live in
+
+    :return: the endpoints that defines which incoming request will be handled by this function
+
     This can return:
         * None : the method is not an endpoint (not decorated with @requests)
         * "'ALL'": this is an endpoint method that will be triggered on every endpoint (decorated with @requests)
@@ -167,6 +181,14 @@ def inspect_executors(
     py_modules: Sequence['pathlib.Path'],
     class_name: Optional[str] = None,
 ) -> List[Tuple[str, str, Optional[str], Tuple, List[Tuple]]]:
+    """
+    Inspect the executors in the given modules
+    :param py_modules: list of py_modules to be inspected
+    :param class_name: name of the class to be inspected
+
+    :return: list of tuples (module_name, class_name, class_docstring, class_args, class_kwargs)
+    """
+
     def _inspect_class_defs(tree):
         return [o for o in ast.walk(tree) if isinstance(o, ast.ClassDef)]
 
@@ -199,7 +221,10 @@ def inspect_executors(
                     if not isinstance(body_item, ast.FunctionDef):
                         continue
                     docstring = ast.get_docstring(body_item)
-                    func_args = [element.arg for element in body_item.args.args + body_item.args.kwonlyargs]
+                    func_args = [
+                        element.arg
+                        for element in body_item.args.args + body_item.args.kwonlyargs
+                    ]
                     annotations = [
                         _get_element_source(
                             lines, element.annotation, remove_whitespace=True
@@ -212,7 +237,8 @@ def inspect_executors(
                         _get_element_source(lines, element, remove_whitespace=False)
                         if element
                         else None
-                        for element in body_item.args.defaults + body_item.args.kw_defaults
+                        for element in body_item.args.defaults
+                        + body_item.args.kw_defaults
                     ]
 
                     # check __init__ function arguments
@@ -248,6 +274,11 @@ def inspect_executors(
 
 
 def filter_executors(executors: List[Tuple[str, str, Tuple, List[Tuple]]]):
+    """
+    Filter the executors based on the given criteria
+    :param executors: list of tuples (class_name, filepath, class_docstring, class_args, class_kwargs)
+    :return: list of tuples (class_name, filepath, class_docstring, class_args, class_kwargs)
+    """
     result = []
     for i, (executor, _, _, init, _) in enumerate(executors):
         # An Executor without __init__ should be valid
@@ -261,6 +292,11 @@ def filter_executors(executors: List[Tuple[str, str, Tuple, List[Tuple]]]):
 
 
 def prelude(imports: List['Package']):
+    """
+    Generate the prelude of the generated python file
+    :param imports: list of packages to be imported
+    :return: prelude of the generated python file
+    """
     dep_tools = set([])
     base_images = set([])
     for pkg in imports:
@@ -272,14 +308,29 @@ def prelude(imports: List['Package']):
     return base_images, dep_tools
 
 
-def to_dto(executor: str, docstring: Optional[str], init: InitInspectionType, endpoints: List[EndpointInspectionType],
-           filepath: str, hubble_score_metrics: Dict) -> ExecutorModel:
+def to_dto(
+    executor: str,
+    docstring: Optional[str],
+    init: InitInspectionType,
+    endpoints: List[EndpointInspectionType],
+    filepath: str,
+    hubble_score_metrics: Dict,
+) -> ExecutorModel:
+    """
+    Convert the given executor to a DTO
+    :param executor: name of the executor
+    :param docstring: docstring of the executor
+    :param init: init function of the executor
+    :param endpoints: endpoints of the executor
+    :param filepath: filepath of the executor
+    :param hubble_score_metrics: hubble score metrics of the executor
+    :return: DTO of the executor
+    """
     if init:
         init_args, init_kwargs, init_docstring = init
         init = {
             'args': [
-                {'arg': arg, 'annotation': annotation}
-                for arg, annotation in init_args
+                {'arg': arg, 'annotation': annotation} for arg, annotation in init_args
             ],
             'kwargs': [
                 {'arg': arg, 'annotation': annotation, 'default': default}
@@ -313,13 +364,11 @@ def to_dto(executor: str, docstring: Optional[str], init: InitInspectionType, en
     return ExecutorModel(**result)
 
 
-
 def normalize(
     work_path: 'pathlib.Path',
     meta: Dict = {'jina': '2'},
     env: Dict = {},
     dry_run: bool = False,
-    **kwargs,
 ) -> ExecutorModel:
     """Normalize the executor package.
 
@@ -327,6 +376,15 @@ def normalize(
     :param meta: the version info of the Jina to work with
     :param env: the environment variables the Jina works with
     :param dry_run: if True, dry_run the file dumps
+
+    :return: normalized Executor model
+
+    :raises DependencyError: Error during resolve the dependencies of Executor
+    :raises Exception: Other error
+    :raises ExecutorExistsError: Detect there are more than one Executors
+    :raises ExecutorNotFoundError: Can't detect any Executor
+    :raises FileNotFoundError: Can't find the path of the folder
+    :raises IllegalExecutorError: The count of legal Executor is 0
     """
 
     logger.debug(f'=> The executor repository is located at: {work_path}')
@@ -366,25 +424,29 @@ def normalize(
 
         py_modules = config.get('metas', {}).get('py_modules', None)
 
-        if isinstance(py_modules, list):
+        if isinstance(py_modules, str):
+            py_glob = [work_path.joinpath(py_modules)]
+        elif isinstance(py_modules, list):
             py_glob += [work_path.joinpath(p) for p in py_modules]
 
-            # extend the path from import statement
-            extended_path = None
-            for filepath in py_glob:
-                with filepath.open() as fin:
-                    tree = ast.parse(fin.read(), filename=str(filepath))
-                    fin.seek(0)
-                    lines = fin.readlines()
-                    for o in ast.walk(tree):
-                        if isinstance(o, ast.ImportFrom):
-                            for alias in o.names:
-                                if alias.name == class_name:
-                                    from_state = list(lines[o.lineno - 1].split(' '))[1]
-                                    extended_path = convert_from_to_path(from_state, base_dir=filepath.parent)
-                                    if extended_path:
-                                        py_glob.append(extended_path)
-                                        break
+        # extend the path from import statement
+        extended_path = None
+        for filepath in py_glob:
+            with filepath.open() as fin:
+                tree = ast.parse(fin.read(), filename=str(filepath))
+                fin.seek(0)
+                lines = fin.readlines()
+                for o in ast.walk(tree):
+                    if isinstance(o, ast.ImportFrom):
+                        for alias in o.names:
+                            if alias.name == class_name:
+                                from_state = list(lines[o.lineno - 1].split(' '))[1]
+                                extended_path = convert_from_to_path(
+                                    from_state, base_dir=filepath.parent
+                                )
+                                if extended_path:
+                                    py_glob.append(extended_path)
+                                    break
 
     else:
         py_glob = list(work_path.glob('*.py')) + list(work_path.glob('executor/*.py'))
