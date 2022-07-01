@@ -1,4 +1,4 @@
-def to_j_cloud_yaml( output_path: str, executor: str,protocol: str):
+def to_jcloud_yaml( output_path: str, executor: str,protocol: str):
     import yaml
     document = f'''
     jtype: Flow
