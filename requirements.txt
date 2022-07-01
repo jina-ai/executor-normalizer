@@ -1,4 +1,4 @@
-jina>=3.3.10
+jina>=3.6.5
 click==8.0.3
 dockerfile-parse==1.2.0
 fastapi==0.68.2
