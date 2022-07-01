@@ -3,6 +3,7 @@ import os
 import shutil
 from jina import Flow
 from loguru import logger
+from .helper import (to_j_cloud_yaml)
 
 def generate(executor: str, type: str, protocol: str):
     f = Flow(
@@ -27,15 +28,7 @@ def generate(executor: str, type: str, protocol: str):
         return (temp_file_path, 'yaml')
     
     if type == 'jcloud':
-        with open(temp_file_path, 'w', encoding='utf-8') as f:
-            f.write(
-                f'''jtype: Flow
-with:
-    protocol: {protocol}
-executors:
-  - name: {executor}
-    uses: jinahub+docker://{executor}'''
-            )
+        to_j_cloud_yaml(temp_file_path, executor, protocol)
         return (temp_file_path, 'yaml')
 
 def clean(path: str):
