@@ -21,5 +21,5 @@ def test_convert_from_path():
 
 def test_to_jcloud_yaml():
     (fp, temp_file_path) = tempfile.mkstemp()
-    assert generator_helper.to_jcloud_yaml(temp_file_path, '_123executor/v1.2.3', 'grpc')
+    assert generator_helper.to_jcloud_yaml(temp_file_path, '^_123!.executor/v1.2.3', 'grpc')
     clean_yaml(temp_file_path) 

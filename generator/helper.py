@@ -13,6 +13,7 @@ def to_jcloud_yaml(output_path: str, executor: str,protocol: str):
     with open(output_path, 'w+', encoding='utf-8') as fd:
         yaml.dump(jsonYaml, fd, sort_keys=False)
     print(f'[b]{output_path}[/b]. You can use it by running')
+    return None
 
 def check_executor_name(executor):
     return (is_python_variable_name(executor) and not is_start_with_name(executor))
