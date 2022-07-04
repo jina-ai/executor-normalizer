@@ -23,3 +23,6 @@ def test_to_jcloud_yaml():
     (fp, temp_file_path) = tempfile.mkstemp()
     assert generator_helper.to_jcloud_yaml(temp_file_path, '^_123!.executor/v1.2.3', 'grpc')
     clean_yaml(temp_file_path) 
+
+def test_fix_executor_name():
+    assert generator_helper.fix_executor_name('*^__4eadqe7213/p234986^&*.^%#$@$#%*&@~xector/v1.2.3') == 'executor____4eadqe7213_p234986________________xector_v1_2_3'
