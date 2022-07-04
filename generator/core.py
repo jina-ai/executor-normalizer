@@ -3,7 +3,7 @@ import os
 import shutil
 from jina import Flow
 from loguru import logger
-from .helper import (to_jcloud_yaml)
+from .helper import to_jcloud_yaml
 
 def generate(executor: str, type: str, protocol: str):
     f = Flow(
