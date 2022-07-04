@@ -13,7 +13,7 @@ def to_jcloud_yaml(output_path: str, executor: str,protocol: str):
     with open(output_path, 'w+', encoding='utf-8') as fd:
         yaml.dump(jsonYaml, fd, sort_keys=False)
     print(f'[b]{output_path}[/b]. You can use it by running')
-    return None
+    return True
 
 def check_executor_name(executor):
     return (is_python_variable_name(executor) and not is_start_with_name(executor))
@@ -29,6 +29,6 @@ def fix_executor_name(executor: str):
     import re
     import uuid
     python_variable_name = executor if is_python_variable_name(executor) else re.sub(r'\W','_',executor);
-    extends_executor_name = f'1executor{python_variable_name}' if is_start_with_name(python_variable_name) else python_variable_name
+    extends_executor_name = f'executor{python_variable_name}' if is_start_with_name(python_variable_name) else python_variable_name
     finally_executor_name = extends_executor_name if check_executor_name(extends_executor_name) else f'default_executor_name_{str(uuid.uuid4())[0:7]}'
     return finally_executor_name if check_executor_name(finally_executor_name) else 'default_executor_name'
