@@ -18,24 +18,17 @@ def generate(executor: str, type: str, protocol: str):
             f.to_k8s_yaml(tmpdirname)
             shutil.make_archive(temp_file_path, 'zip', tmpdirname)
             os.remove(temp_file_path)
-        
+
         return (f'{temp_file_path}.zip', 'zip')
 
     if type == 'docker_compose':
         f.to_docker_compose_yaml(temp_file_path)
 
         return (temp_file_path, 'yaml')
-    
+
     if type == 'jcloud':
-        with open(temp_file_path, 'w', encoding='utf-8') as f:
-            f.write(
-                f'''jtype: Flow
-with:
-    protocol: {protocol}
-executors:
-  - name: {executor}
-    uses: jinahub+docker://{executor}'''
-            )
+        f.save_config(temp_file_path)
+
         return (temp_file_path, 'yaml')
 
 def clean(path: str):
