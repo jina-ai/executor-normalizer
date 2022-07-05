@@ -3,7 +3,6 @@ import os
 import shutil
 from jina import Flow
 from loguru import logger
-from .helper import to_jcloud_yaml
 
 def generate(executor: str, type: str, protocol: str):
     f = Flow(
@@ -19,16 +18,17 @@ def generate(executor: str, type: str, protocol: str):
             f.to_k8s_yaml(tmpdirname)
             shutil.make_archive(temp_file_path, 'zip', tmpdirname)
             os.remove(temp_file_path)
-        
+
         return (f'{temp_file_path}.zip', 'zip')
 
     if type == 'docker_compose':
         f.to_docker_compose_yaml(temp_file_path)
 
         return (temp_file_path, 'yaml')
-    
+
     if type == 'jcloud':
-        to_jcloud_yaml(temp_file_path, executor, protocol)
+        f.save_config(temp_file_path)
+
         return (temp_file_path, 'yaml')
 
 def clean(path: str):
