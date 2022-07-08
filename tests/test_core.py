@@ -56,11 +56,11 @@ def test_inspect_dummy_execs():
         ),
         (
             Path(__file__).parent / 'cases' / 'executor_5',
-            Path(__file__).parent / 'cases' / 'executor_5.json',
+            None,
         ),
         (
             Path(__file__).parent / 'cases' / 'executor_6',
-            Path(__file__).parent / 'cases' / 'executor_6.json',
+            None,
         ),
         (
             Path(__file__).parent / 'cases' / 'nested',
