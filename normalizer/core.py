@@ -421,8 +421,17 @@ def normalize(
 
         if class_name is None:
             raise Exception('Not found jtype in config.yml')
+        
+        metas_py_modules = config.get('metas', {}).get('py_modules', None);
+        root_py_modules = config.get('py_modules', None)
 
-        py_modules = config.get('metas', {}).get('py_modules', None) if config.get('metas', {}).get('py_modules', None) else config.get('py_modules', None)
+        py_modules = None;
+        if metas_py_modules and root_py_modules:
+            py_modules = metas_py_modules + root_py_modules  
+        elif metas_py_modules and root_py_modules is None:
+            py_modules = metas_py_modules  
+        elif metas_py_modules is None and root_py_modules:
+            py_modules = root_py_modules
 
         if isinstance(py_modules, str):
             py_glob = [work_path.joinpath(py_modules)]
