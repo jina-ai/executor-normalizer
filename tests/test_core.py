@@ -74,6 +74,14 @@ def test_inspect_dummy_execs():
             Path(__file__).parent / 'cases' / 'nested_5',
             None,
         ),
+        (
+            Path(__file__).parent / 'cases' / 'nested_6',
+            None,
+        ),
+        (
+            Path(__file__).parent / 'cases' / 'nested_7',
+            None,
+        ),
     ],
 )
 def test_get_executor_args(package_path, expected_path):
