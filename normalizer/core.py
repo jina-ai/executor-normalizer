@@ -396,7 +396,6 @@ def normalize(
     logger.debug(f'=> The environment variables: ')
     for k, v in env.items():
         logger.debug('%20s: -> %20s' % (k, v))
-
     if not work_path.exists():
         raise FileNotFoundError(
             f'The folder "{work_path}" does not exist, can not normalize'

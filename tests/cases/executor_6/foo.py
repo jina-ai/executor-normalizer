@@ -1,6 +1,6 @@
 from jina import Executor, requests
 
-class Executor4(Executor):
+class Executor6(Executor):
     @requests
     def foo(self):
         pass

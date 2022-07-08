@@ -56,11 +56,11 @@ def test_inspect_dummy_execs():
         ),
         (
             Path(__file__).parent / 'cases' / 'executor_5',
-            None,
+            Path(__file__).parent / 'cases' / 'executor_5.json',
         ),
         (
             Path(__file__).parent / 'cases' / 'executor_6',
-            None,
+            Path(__file__).parent / 'cases' / 'executor_6.json',
         ),
         (
             Path(__file__).parent / 'cases' / 'nested',
@@ -94,8 +94,6 @@ def test_get_executor_args(package_path, expected_path):
             assert executor == expected_executor
     else:
         core.normalize(package_path, dry_run=True)
-
-
 def test_prelude():
     imports = [
         deps.Package(name='tensorflow', version='2.5.0'),

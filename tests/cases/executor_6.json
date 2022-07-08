@@ -1,0 +1,18 @@
+{
+  "executor": "Executor6",
+  "endpoints": [
+    {
+      "name": "foo",
+      "args": [
+        {
+          "arg": "self",
+          "annotation": null
+        }
+      ],
+      "kwargs": [],
+      "requests": "ALL"
+    }
+  ],
+  "hubble_score_metrics": {},
+  "filepath": ""
+}
