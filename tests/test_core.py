@@ -55,6 +55,14 @@ def test_inspect_dummy_execs():
             Path(__file__).parent / 'cases' / 'executor_4.json',
         ),
         (
+            Path(__file__).parent / 'cases' / 'executor_5',
+            None,
+        ),
+        (
+            Path(__file__).parent / 'cases' / 'executor_6',
+            None,
+        ),
+        (
             Path(__file__).parent / 'cases' / 'nested',
             Path(__file__).parent / 'cases' / 'nested.json',
         ),
@@ -72,14 +80,6 @@ def test_inspect_dummy_execs():
         ),
         (
             Path(__file__).parent / 'cases' / 'nested_5',
-            None,
-        ),
-        (
-            Path(__file__).parent / 'cases' / 'nested_6',
-            None,
-        ),
-        (
-            Path(__file__).parent / 'cases' / 'nested_7',
             None,
         ),
     ],

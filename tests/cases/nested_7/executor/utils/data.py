@@ -1,2 +1,0 @@
-def data():
-    print('data')

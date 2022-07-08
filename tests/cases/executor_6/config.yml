@@ -1,0 +1,6 @@
+jtype: Executor6
+py_modules:
+    - foo.py
+metas:
+  py_modules:
+    - foo.py
