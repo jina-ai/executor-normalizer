@@ -396,7 +396,6 @@ def normalize(
     logger.debug(f'=> The environment variables: ')
     for k, v in env.items():
         logger.debug('%20s: -> %20s' % (k, v))
-
     if not work_path.exists():
         raise FileNotFoundError(
             f'The folder "{work_path}" does not exist, can not normalize'
@@ -421,9 +420,14 @@ def normalize(
 
         if class_name is None:
             raise Exception('Not found jtype in config.yml')
+        
+        metas_py_modules = config.get('metas', {}).get('py_modules', None);
+        root_py_modules = config.get('py_modules', None)
 
-        py_modules = config.get('metas', {}).get('py_modules', None)
+        if metas_py_modules and root_py_modules:
+            raise Exception('The parameter py_modules can only be appear in one of metas and root in config.yml')
 
+        py_modules = metas_py_modules if metas_py_modules else root_py_modules
         if isinstance(py_modules, str):
             py_glob = [work_path.joinpath(py_modules)]
         elif isinstance(py_modules, list):
