@@ -369,6 +369,7 @@ def normalize(
     meta: Dict = {'jina': '2'},
     env: Dict = {},
     dry_run: bool = False,
+    **kwargs,
 ) -> ExecutorModel:
     """Normalize the executor package.
 
