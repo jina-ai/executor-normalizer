@@ -55,6 +55,10 @@ def create_app() -> FastAPI:
             title=fast_app.title + ' - ReDoc',
             # redoc_js_url='/static/redoc.standalone.js',
         )
+    
+    @fast_app.get(f'/ping', include_in_schema=False)
+    async def ping():
+        return 'pong'
 
     return fast_app
 
