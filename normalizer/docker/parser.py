@@ -80,8 +80,6 @@ class ExecutorDockerfile:
                 """
                 )+build_args+build_envs)
 
-        assert print(self._parser.content)
-
     def add_apt_installs(self, tools):
         instruction_template = dedent(
             """\
