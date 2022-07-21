@@ -599,6 +599,8 @@ def normalize(
         #         f'RUN pip install jina=={jina_version}', at_start=True
         #     )
         #     dockerfile.dump(work_path / 'Dockerfile.normed')
+        if not dry_run:
+            dockerfile.dump(dockerfile_path)
     else:
         logger.debug('=> generating Dockerfile ...')
         dockerfile = ExecutorDockerfile(build_args={'JINA_VERSION': jina_image_tag})
