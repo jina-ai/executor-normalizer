@@ -36,64 +36,89 @@ def test_inspect_dummy_execs():
 
 
 @pytest.mark.parametrize(
-    'package_path, expected_path',
+    'package_path, expected_path, build_args_envs',
     [
         (
             Path(__file__).parent / 'cases' / 'executor_1',
             Path(__file__).parent / 'cases' / 'executor_1.json',
+            { 
+                'AUTH_TOKEN': "AUTH_TOKEN",
+                'TOKEN': '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'
+            } ,
         ),
         (
             Path(__file__).parent / 'cases' / 'executor_2',
             Path(__file__).parent / 'cases' / 'executor_2.json',
+            {},
         ),
         (
             Path(__file__).parent / 'cases' / 'executor_3',
             Path(__file__).parent / 'cases' / 'executor_3.json',
+            {},
         ),
         (
             Path(__file__).parent / 'cases' / 'executor_4',
             Path(__file__).parent / 'cases' / 'executor_4.json',
+            {},
         ),
         (
             Path(__file__).parent / 'cases' / 'executor_5',
             None,
+            {},
         ),
         (
             Path(__file__).parent / 'cases' / 'executor_6',
             None,
+            {},
+        ),
+        (
+            Path(__file__).parent / 'cases' / 'executor_7',
+            None,
+            { 
+                'AUTH_TOKEN': "AUTH_TOKEN",
+                'TOKEN': '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'
+            } ,
         ),
         (
             Path(__file__).parent / 'cases' / 'nested',
             Path(__file__).parent / 'cases' / 'nested.json',
+            {},
         ),
         (
             Path(__file__).parent / 'cases' / 'nested_2',
             None,
+            { 
+                'AUTH_TOKEN': "AUTH_TOKEN",
+                'TOKEN': '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'
+            } ,
         ),
         (
             Path(__file__).parent / 'cases' / 'nested_3',
             None,
+            {},
         ),
         (
             Path(__file__).parent / 'cases' / 'nested_4',
             None,
+            {},
         ),
         (
             Path(__file__).parent / 'cases' / 'nested_5',
             None,
+            {},
         ),
     ],
 )
-def test_get_executor_args(package_path, expected_path):
+def test_get_executor_args(package_path, expected_path, build_args_envs):
     if expected_path:
         with open(expected_path, 'r') as fp:
             expected_executor = ExecutorModel(**json.loads(fp.read()))
-            executor = core.normalize(package_path, dry_run=True)
+            executor = core.normalize(package_path, build_args_envs=build_args_envs, dry_run=True)
             executor.hubble_score_metrics = expected_executor.hubble_score_metrics
             executor.filepath = expected_executor.filepath
             assert executor == expected_executor
     else:
-        core.normalize(package_path, dry_run=True)
+        core.normalize(package_path, build_args_envs=build_args_envs, dry_run=True)
 def test_prelude():
     imports = [
         deps.Package(name='tensorflow', version='2.5.0'),

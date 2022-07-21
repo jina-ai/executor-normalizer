@@ -5,6 +5,8 @@ from pathlib import Path
 from posixpath import basename
 from textwrap import dedent
 from typing import Dict, List
+import re
+FROM_VAR_RE = re.compile(r"(?P<var>(?P<name>FROM .*))")
 
 from dockerfile_parse import DockerfileParser
 
@@ -41,6 +43,44 @@ class ExecutorDockerfile:
 
     def __str__(self):
         return self.content
+    
+    def get_build_args_envs(self, build_args_envs): 
+        build_args = '';
+        for index, item in enumerate(build_args_envs):
+            build_args += dedent(
+            f"""\
+            ARG {item}
+            """
+        )
+        build_envs = '';
+        for index, item in enumerate(build_args_envs):
+            build_envs += dedent(
+            f"""\
+            ENV {item}=${item}
+            """
+        )
+        return (build_args, build_envs)
+
+    def add_build_args_envs(self, build_args_envs):
+        build_args, build_envs = self.get_build_args_envs(build_args_envs)
+        if len(build_args):
+            self._parser.content+=build_args
+        if len(build_args):
+            self._parser.content+=build_envs
+    
+    def insert_build_args_envs(self, build_args_envs):
+        build_args, build_envs = self.get_build_args_envs(build_args_envs)
+        build_args_envs_str = build_args if len(build_args) else ''
+        build_args_envs_str += build_envs if len(build_args) else ''
+        if len(build_args_envs_str):
+            for env_var, var_name in FROM_VAR_RE.findall(self._parser.content):
+                self._parser.content = self._parser.content.replace(var_name, dedent(
+                f"""\
+                {var_name} 
+                """
+                )+build_args+build_envs)
+
+        assert print(self._parser.content)
 
     def add_apt_installs(self, tools):
         instruction_template = dedent(

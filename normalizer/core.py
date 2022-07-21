@@ -368,6 +368,7 @@ def normalize(
     work_path: 'pathlib.Path',
     meta: Dict = {'jina': '2'},
     env: Dict = {},
+    build_args_envs: Dict = {},
     dry_run: bool = False,
     **kwargs,
 ) -> ExecutorModel:
@@ -586,7 +587,8 @@ def normalize(
             docker_file=dockerfile_path,
             build_args={'JINA_VERSION': f'{jina_version}'},
         )
-
+        if len(build_args_envs.keys()):
+            dockerfile.insert_build_args_envs(build_args_envs)
         # if dockerfile.is_multistage():
         #     # Don't support multi-stage Dockerfie Optimization
         #     return
@@ -604,6 +606,8 @@ def normalize(
         # if len(base_images) > 0:
         #     logger.debug(f'=> use base image: {base_images}')
         #     dockerfile.baseimage = base_images.pop()
+        if len(build_args_envs.keys()):
+            dockerfile.add_build_args_envs(build_args_envs)
 
         dockerfile.add_work_dir()
         # dockerfile._parser.add_lines(f'RUN pip install jina=={jina_version}')
