@@ -38,104 +38,90 @@ def test_inspect_dummy_execs():
 
 
 @pytest.mark.parametrize(
-    'package_path, expected_path, build_args_envs, dry_run',
+    'package_path, expected_path',
     [
         (
             Path(__file__).parent / 'cases' / 'executor_1',
-            Path(__file__).parent / 'cases' / 'executor_1.json',
-            { 
-                'AUTH_TOKEN': "AUTH_TOKEN",
-                'TOKEN': 'ghp_Nwh9o70GDSzs'
-            } ,
-            False
+            Path(__file__).parent / 'cases' / 'executor_1.json'
         ),
         (
             Path(__file__).parent / 'cases' / 'executor_2',
-            Path(__file__).parent / 'cases' / 'executor_2.json',
-            {},
-            True
+            Path(__file__).parent / 'cases' / 'executor_2.json'
         ),
         (
             Path(__file__).parent / 'cases' / 'executor_3',
-            Path(__file__).parent / 'cases' / 'executor_3.json',
-            {},
-            True
+            Path(__file__).parent / 'cases' / 'executor_3.json'
         ),
         (
             Path(__file__).parent / 'cases' / 'executor_4',
-            Path(__file__).parent / 'cases' / 'executor_4.json',
-            {},
-            True
+            Path(__file__).parent / 'cases' / 'executor_4.json'
         ),
         (
             Path(__file__).parent / 'cases' / 'executor_5',
-            None,
-            {},
-            True
+            None
         ),
         (
             Path(__file__).parent / 'cases' / 'executor_6',
-            None,
-            {},
-            True
-        ),
-        (
-            Path(__file__).parent / 'cases' / 'executor_7',
-            None,
-            { 
-                'AUTH_TOKEN': "AUTH_TOKEN",
-                'TOKEN': 'ghp_Nwh9o70GDSzs'
-            },
-            True
+            None
         ),
         (
             Path(__file__).parent / 'cases' / 'nested',
-            Path(__file__).parent / 'cases' / 'nested.json',
-            {},
-            True
+            Path(__file__).parent / 'cases' / 'nested.json'
         ),
         (
             Path(__file__).parent / 'cases' / 'nested_2',
-            None,
-            { 
-                'AUTH_TOKEN': "AUTH_TOKEN",
-                'TOKEN': 'ghp_Nwh9o70GDSzs'
-            },
-            False
+            None
         ),
         (
             Path(__file__).parent / 'cases' / 'nested_3',
-            None,
-            {},
-            True
+            None
         ),
         (
             Path(__file__).parent / 'cases' / 'nested_4',
-            None,
-            {},
-            True
+            None
         ),
         (
             Path(__file__).parent / 'cases' / 'nested_5',
-            None,
-            {},
-            True
+            None
         ),
     ],
 )
-def test_get_executor_args(package_path, expected_path, build_args_envs, dry_run):
+def test_get_executor_args(package_path, expected_path):
     if expected_path:
         with open(expected_path, 'r') as fp:
             expected_executor = ExecutorModel(**json.loads(fp.read()))
-            executor = core.normalize(package_path, build_args_envs=build_args_envs, dry_run=dry_run)
+            executor = core.normalize(package_path, dry_run=True)
             executor.hubble_score_metrics = expected_executor.hubble_score_metrics
             executor.filepath = expected_executor.filepath
             assert executor == expected_executor
     else:
-        core.normalize(package_path, build_args_envs=build_args_envs, dry_run=dry_run)
-    
+        core.normalize(package_path, dry_run=True)
+
+
+@pytest.mark.parametrize(
+    'package_path, build_args_envs',
+    [   
+        (
+            Path(__file__).parent / 'cases' / 'executor_1',
+            { 
+                'AUTH_TOKEN': "AUTH_TOKEN",
+                'TOKEN': 'ghp_Nwh9o70GDSzs'
+            }
+        ),
+        (
+            Path(__file__).parent / 'cases' / 'executor_7',
+            { 
+                'AUTH_TOKEN': "AUTH_TOKEN",
+                'TOKEN': 'ghp_Nwh9o70GDSzs'
+            }
+        ),
+    ],
+)
+def test_insert_dockerfile_env_vars(package_path, build_args_envs):
+    core.normalize(package_path, build_args_envs=build_args_envs, dry_run=False)
+
     dockerfilePath = Path(package_path / 'Dockerfile') 
-    if dry_run is False and dockerfilePath.exists():
+    if dockerfilePath.exists():
         with open(dockerfilePath, 'r') as fp:
             dockerfileStr = str(fp.read())
             for index, item in enumerate(build_args_envs):
