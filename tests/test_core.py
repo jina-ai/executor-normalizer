@@ -1,8 +1,9 @@
+from genericpath import exists
 import json
 from pathlib import Path
 from pickle import TRUE
 import pytest
-import re
+import os
 
 from normalizer import deps, core
 from normalizer.models import ExecutorModel
@@ -117,16 +118,34 @@ def test_get_executor_args(package_path, expected_path):
         ),
     ],
 )
-def test_insert_dockerfile_env_vars(package_path, build_args_envs):
-    core.normalize(package_path, build_args_envs=build_args_envs, dry_run=False)
+def test_compare_dockerfile_env_vars(package_path, build_args_envs):
 
-    dockerfilePath = Path(package_path / 'Dockerfile') 
-    if dockerfilePath.exists():
-        with open(dockerfilePath, 'r') as fp:
+    dockerfile_path = Path(package_path / 'Dockerfile') 
+    dockerfile_expected_path = Path(package_path / 'Dockerfile.expect') 
+
+    originDockerfileStr = None;
+    if dockerfile_path.exists():
+        with open(dockerfile_path, 'r') as fp:
+            originDockerfileStr = str(fp.read())
+
+    core.normalize(package_path, build_args_envs=build_args_envs, dry_run=False)
+    if dockerfile_path.exists():
+        dockerfileStr = None
+        with open(dockerfile_path, 'r') as fp:
             dockerfileStr = str(fp.read())
-            for index, item in enumerate(build_args_envs):
-                print('search', dockerfileStr, item, re.search(item, dockerfileStr))
-                assert re.search(item, dockerfileStr) is not None
+        
+        dockerfileExpectedStr = ''
+        with open(dockerfile_expected_path, 'r') as fp:
+            dockerfileExpectedStr = str(fp.read())
+
+        assert dockerfileExpectedStr == dockerfileStr
+
+
+    if originDockerfileStr:
+        with open(dockerfile_path, 'w') as fp:
+            fp.write(originDockerfileStr)
+    elif dockerfile_path.exists():
+        os.remove(dockerfile_path)
 
 
 def test_prelude():
