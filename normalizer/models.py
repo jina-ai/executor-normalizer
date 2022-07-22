@@ -38,6 +38,7 @@ class PackagePayload(BaseModel):
     package_path: Path
     meta: Optional[Dict] = {'jina': 'master'}
     env: Optional[Dict] = {}
+    build_args_envs: Optional[Dict] = {}
 
 
 class NormalizeResult(BaseModel):
