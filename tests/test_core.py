@@ -45,7 +45,7 @@ def test_inspect_dummy_execs():
             Path(__file__).parent / 'cases' / 'executor_1.json',
             { 
                 'AUTH_TOKEN': "AUTH_TOKEN",
-                'TOKEN': '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'
+                'TOKEN': 'ghp_Nwh9o70GDSzs'
             } ,
             False
         ),
@@ -84,7 +84,7 @@ def test_inspect_dummy_execs():
             None,
             { 
                 'AUTH_TOKEN': "AUTH_TOKEN",
-                'TOKEN': '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'
+                'TOKEN': 'ghp_Nwh9o70GDSzs'
             },
             True
         ),
@@ -99,7 +99,7 @@ def test_inspect_dummy_execs():
             None,
             { 
                 'AUTH_TOKEN': "AUTH_TOKEN",
-                'TOKEN': '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'
+                'TOKEN': 'ghp_Nwh9o70GDSzs'
             },
             False
         ),
