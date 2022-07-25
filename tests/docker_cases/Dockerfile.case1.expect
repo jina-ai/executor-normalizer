@@ -1,9 +1,8 @@
-FROM jinaai/jina:2.0-perf 
+FROM jinaai/jina:2.0-perf
 ARG AUTH_TOKEN
 ARG TOKEN
 ENV AUTH_TOKEN=$AUTH_TOKEN
 ENV TOKEN=$TOKEN
-
 
 COPY . /workspace
 WORKDIR /workspace
