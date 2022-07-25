@@ -1,3 +1,4 @@
+from ctypes.wintypes import PINT
 import json
 from pathlib import Path
 import pytest
@@ -127,23 +128,23 @@ def test_compare_dockerfile_env_vars(package_path, build_args_envs):
             originDockerfileStr = str(fp.read())
 
     core.normalize(package_path, build_args_envs=build_args_envs, dry_run=False)
-    if dockerfile_path.exists():
-        dockerfileStr = None
-        with open(dockerfile_path, 'r') as fp:
-            dockerfileStr = str(fp.read())
-        
-        dockerfileExpectedStr = ''
-        with open(dockerfile_expected_path, 'r') as fp:
-            dockerfileExpectedStr = str(fp.read())
+    assert dockerfile_path.exists() == True;
 
-        assert dockerfileExpectedStr == dockerfileStr
-
-
+    dockerfileStr = None
+    with open(dockerfile_path, 'r') as fp:
+        dockerfileStr = str(fp.read())
+    
+    dockerfileExpectedStr = ''
+    with open(dockerfile_expected_path, 'r') as fp:
+        dockerfileExpectedStr = str(fp.read())
+    
     if originDockerfileStr:
         with open(dockerfile_path, 'w') as fp:
             fp.write(originDockerfileStr)
-    elif dockerfile_path.exists():
+    else:
         os.remove(dockerfile_path)
+    
+    assert dockerfileExpectedStr == dockerfileStr
 
 
 def test_prelude():
