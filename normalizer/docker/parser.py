@@ -5,6 +5,8 @@ from pathlib import Path
 from posixpath import basename
 from textwrap import dedent
 from typing import Dict, List
+import re
+FROM_VAR_RE = re.compile(r"(?P<var>(?P<name>FROM .*))")
 
 from dockerfile_parse import DockerfileParser
 
@@ -41,6 +43,47 @@ class ExecutorDockerfile:
 
     def __str__(self):
         return self.content
+    
+    def get_build_args_envs(self, build_args_envs): 
+        build_args = '';
+        build_args_line_num = 0;
+        for index, item in enumerate(build_args_envs):
+            build_args_line_num += 1
+            build_args += dedent(
+            f"""\
+            ARG {item}
+            """
+        )
+        build_envs = '';
+        build_envs_line_num = 0
+        for index, item in enumerate(build_args_envs):
+            build_envs_line_num += 1
+            build_envs += dedent(
+            f"""\
+            ENV {item}=${item}
+            """
+        )
+        return (build_args, build_envs, build_args_line_num, build_envs_line_num)
+    
+    def insert_build_args_envs(self, build_args_envs):
+        build_args, build_envs, build_args_line_num, build_envs_line_num = self.get_build_args_envs(build_args_envs)
+        build_args_envs_line_num = 0;
+        build_args_envs_str = '';
+        if len(build_args): 
+            build_args_envs_str += build_args
+            build_args_envs_line_num += build_args_line_num
+        
+        if len(build_envs): 
+            build_args_envs_str += build_envs
+            build_args_envs_line_num += build_envs_line_num
+
+        if len(build_args_envs_str):
+            insert_num = 0
+            for index, line in enumerate(self._parser.lines):
+                if (FROM_VAR_RE.match(line) is not None):
+                    insert_line_num = index + insert_num * build_args_envs_line_num + 1
+                    self._parser.add_lines_at(insert_line_num, build_args_envs_str)
+                    insert_num += 1
 
     def add_apt_installs(self, tools):
         instruction_template = dedent(

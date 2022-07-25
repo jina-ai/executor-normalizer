@@ -1,6 +1,7 @@
 import json
 from pathlib import Path
 import pytest
+import os
 
 from normalizer import deps, core
 from normalizer.models import ExecutorModel
@@ -40,47 +41,47 @@ def test_inspect_dummy_execs():
     [
         (
             Path(__file__).parent / 'cases' / 'executor_1',
-            Path(__file__).parent / 'cases' / 'executor_1.json',
+            Path(__file__).parent / 'cases' / 'executor_1.json'
         ),
         (
             Path(__file__).parent / 'cases' / 'executor_2',
-            Path(__file__).parent / 'cases' / 'executor_2.json',
+            Path(__file__).parent / 'cases' / 'executor_2.json'
         ),
         (
             Path(__file__).parent / 'cases' / 'executor_3',
-            Path(__file__).parent / 'cases' / 'executor_3.json',
+            Path(__file__).parent / 'cases' / 'executor_3.json'
         ),
         (
             Path(__file__).parent / 'cases' / 'executor_4',
-            Path(__file__).parent / 'cases' / 'executor_4.json',
+            Path(__file__).parent / 'cases' / 'executor_4.json'
         ),
         (
             Path(__file__).parent / 'cases' / 'executor_5',
-            None,
+            None
         ),
         (
             Path(__file__).parent / 'cases' / 'executor_6',
-            None,
+            None
         ),
         (
             Path(__file__).parent / 'cases' / 'nested',
-            Path(__file__).parent / 'cases' / 'nested.json',
+            Path(__file__).parent / 'cases' / 'nested.json'
         ),
         (
             Path(__file__).parent / 'cases' / 'nested_2',
-            None,
+            None
         ),
         (
             Path(__file__).parent / 'cases' / 'nested_3',
-            None,
+            None
         ),
         (
             Path(__file__).parent / 'cases' / 'nested_4',
-            None,
+            None
         ),
         (
             Path(__file__).parent / 'cases' / 'nested_5',
-            None,
+            None
         ),
     ],
 )
@@ -94,6 +95,57 @@ def test_get_executor_args(package_path, expected_path):
             assert executor == expected_executor
     else:
         core.normalize(package_path, dry_run=True)
+
+
+@pytest.mark.parametrize(
+    'package_path, build_args_envs',
+    [   
+        (
+            Path(__file__).parent / 'cases' / 'executor_1',
+            { 
+                'AUTH_TOKEN': "AUTH_TOKEN",
+                'TOKEN': 'ghp_Nwh9o70GDSzs'
+            }
+        ),
+        (
+            Path(__file__).parent / 'cases' / 'executor_7',
+            { 
+                'AUTH_TOKEN': "AUTH_TOKEN",
+                'TOKEN': 'ghp_Nwh9o70GDSzs'
+            }
+        ),
+    ],
+)
+def test_compare_dockerfile_env_vars(package_path, build_args_envs):
+
+    dockerfile_path = Path(package_path / 'Dockerfile') 
+    dockerfile_expected_path = Path(package_path / 'Dockerfile.expect') 
+
+    originDockerfileStr = None;
+    if dockerfile_path.exists():
+        with open(dockerfile_path, 'r') as fp:
+            originDockerfileStr = str(fp.read())
+
+    core.normalize(package_path, build_args_envs=build_args_envs, dry_run=False)
+    assert dockerfile_path.exists() == True;
+
+    dockerfileStr = None
+    with open(dockerfile_path, 'r') as fp:
+        dockerfileStr = str(fp.read())
+    
+    dockerfileExpectedStr = ''
+    with open(dockerfile_expected_path, 'r') as fp:
+        dockerfileExpectedStr = str(fp.read())
+    
+    if originDockerfileStr:
+        with open(dockerfile_path, 'w') as fp:
+            fp.write(originDockerfileStr)
+    else:
+        os.remove(dockerfile_path)
+    
+    assert dockerfileExpectedStr == dockerfileStr
+
+
 def test_prelude():
     imports = [
         deps.Package(name='tensorflow', version='2.5.0'),

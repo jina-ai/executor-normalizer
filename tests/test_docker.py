@@ -34,9 +34,27 @@ def test_baseimage(exe_dockerfile):
     assert exe_dockerfile.lines[3] == 'FROM jinaai/jina:latest-perf\n'
 
 
-def test_load_dockerfile():
+@pytest.mark.parametrize(
+    'build_args_envs',
+    [   
+        (
+             { 
+                'AUTH_TOKEN': "AUTH_TOKEN",
+                'TOKEN': 'ghp_Nwh9o70GDSzs'
+            }
+        ),
+    ],
+)
+def test_load_dockerfile(build_args_envs):
     docker_file = Path(__file__).parent / 'docker_cases' / 'Dockerfile.case1'
+    docker_expect_file = Path(__file__).parent / 'docker_cases' / 'Dockerfile.case1.expect'
+
     parser = ExecutorDockerfile(docker_file=docker_file)
+    parser.insert_build_args_envs(build_args_envs)
+
+    expect_parser = ExecutorDockerfile(docker_file=docker_expect_file)
+    
+    assert str(parser) == str(expect_parser)
     assert len(parser.parent_images) == 1
     assert parser.baseimage == 'jinaai/jina:2.0-perf'
     assert parser.entrypoint == '["jina", "executor", "--uses", "config.yml"]'
