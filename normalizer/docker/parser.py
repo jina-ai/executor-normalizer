@@ -46,32 +46,44 @@ class ExecutorDockerfile:
     
     def get_build_args_envs(self, build_args_envs): 
         build_args = '';
+        build_args_line_num = 0;
         for index, item in enumerate(build_args_envs):
+            build_args_line_num += 1
             build_args += dedent(
             f"""\
             ARG {item}
             """
         )
         build_envs = '';
+        build_envs_line_num = 0
         for index, item in enumerate(build_args_envs):
+            build_envs_line_num += 1
             build_envs += dedent(
             f"""\
             ENV {item}=${item}
             """
         )
-        return (build_args, build_envs)
+        return (build_args, build_envs, build_args_line_num, build_envs_line_num)
     
     def insert_build_args_envs(self, build_args_envs):
-        build_args, build_envs = self.get_build_args_envs(build_args_envs)
-        build_args_envs_str = build_args if len(build_args) else ''
-        build_args_envs_str += build_envs if len(build_args) else ''
+        build_args, build_envs, build_args_line_num, build_envs_line_num = self.get_build_args_envs(build_args_envs)
+        build_args_envs_line_num = 0;
+        build_args_envs_str = '';
+        if len(build_args): 
+            build_args_envs_str += build_args
+            build_args_envs_line_num += build_args_line_num
+        
+        if len(build_envs): 
+            build_args_envs_str += build_envs
+            build_args_envs_line_num += build_envs_line_num
+
         if len(build_args_envs_str):
-            for env_var, var_name in FROM_VAR_RE.findall(self._parser.content):
-                self._parser.content = self._parser.content.replace(var_name, dedent(
-                f"""\
-                {var_name} 
-                """
-                ) + build_args + build_envs)
+            insert_num = 0
+            for index, line in enumerate(self._parser.lines):
+                if (FROM_VAR_RE.match(line) is not None):
+                    insert_line_num = index + insert_num * build_args_envs_line_num + 1
+                    self._parser.add_lines_at(insert_line_num, build_args_envs_str)
+                    insert_num += 1
 
     def add_apt_installs(self, tools):
         instruction_template = dedent(
