@@ -60,13 +60,6 @@ class ExecutorDockerfile:
             """
         )
         return (build_args, build_envs)
-
-    def add_build_args_envs(self, build_args_envs):
-        build_args, build_envs = self.get_build_args_envs(build_args_envs)
-        if len(build_args):
-            self._parser.content+=build_args
-        if len(build_args):
-            self._parser.content+=build_envs
     
     def insert_build_args_envs(self, build_args_envs):
         build_args, build_envs = self.get_build_args_envs(build_args_envs)
@@ -78,7 +71,7 @@ class ExecutorDockerfile:
                 f"""\
                 {var_name} 
                 """
-                )+build_args+build_envs)
+                ) + build_args + build_envs)
 
     def add_apt_installs(self, tools):
         instruction_template = dedent(

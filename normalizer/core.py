@@ -609,7 +609,7 @@ def normalize(
         #     logger.debug(f'=> use base image: {base_images}')
         #     dockerfile.baseimage = base_images.pop()
         if len(build_args_envs.keys()):
-            dockerfile.add_build_args_envs(build_args_envs)
+            dockerfile.insert_build_args_envs(build_args_envs)
 
         dockerfile.add_work_dir()
         # dockerfile._parser.add_lines(f'RUN pip install jina=={jina_version}')
