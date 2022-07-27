@@ -114,6 +114,10 @@ def test_get_executor_args(package_path, expected_path):
                 'TOKEN': 'ghp_Nwh9o70GDSzs'
             }
         ),
+        (
+            Path(__file__).parent / 'cases' / 'executor_2',
+            None
+        ),
     ],
 )
 def test_compare_dockerfile_env_vars(package_path, build_args_envs):
