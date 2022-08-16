@@ -98,20 +98,20 @@ def test_get_executor_args(package_path, expected_path):
 
 
 @pytest.mark.parametrize(
-    'package_path, build_args_envs',
+    'package_path, build_env',
     [   
         (
             Path(__file__).parent / 'cases' / 'executor_1',
             { 
-                'AUTH_TOKEN': "AUTH_TOKEN",
-                'TOKEN': 'ghp_Nwh9o70GDSzs'
+                'DOMAIN': "DOMAIN",
+                'REPO': 'REPO'
             }
         ),
         (
             Path(__file__).parent / 'cases' / 'executor_7',
             { 
-                'AUTH_TOKEN': "AUTH_TOKEN",
-                'TOKEN': 'ghp_Nwh9o70GDSzs'
+                'DOMAIN': "DOMAIN",
+                'REPO': 'REPO'
             }
         ),
         (
@@ -120,7 +120,7 @@ def test_get_executor_args(package_path, expected_path):
         ),
     ],
 )
-def test_compare_dockerfile_env_vars(package_path, build_args_envs):
+def test_compare_dockerfile_env_vars(package_path, build_env):
 
     dockerfile_path = Path(package_path / 'Dockerfile') 
     dockerfile_expected_path = Path(package_path / 'Dockerfile.expect') 
@@ -130,7 +130,7 @@ def test_compare_dockerfile_env_vars(package_path, build_args_envs):
         with open(dockerfile_path, 'r') as fp:
             originDockerfileStr = str(fp.read())
 
-    core.normalize(package_path, build_args_envs=build_args_envs, dry_run=False)
+    core.normalize(package_path, build_env=build_env, dry_run=False)
     assert dockerfile_path.exists() == True;
 
     dockerfileStr = None

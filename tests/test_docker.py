@@ -35,7 +35,7 @@ def test_baseimage(exe_dockerfile):
 
 
 @pytest.mark.parametrize(
-    'build_args_envs',
+    'build_env',
     [   
         (
              { 
@@ -45,12 +45,12 @@ def test_baseimage(exe_dockerfile):
         ),
     ],
 )
-def test_load_dockerfile(build_args_envs):
+def test_load_dockerfile(build_env):
     docker_file = Path(__file__).parent / 'docker_cases' / 'Dockerfile.case1'
     docker_expect_file = Path(__file__).parent / 'docker_cases' / 'Dockerfile.case1.expect'
 
     parser = ExecutorDockerfile(docker_file=docker_file)
-    parser.insert_build_args_envs(build_args_envs)
+    parser.insert_build_env(build_env)
 
     expect_parser = ExecutorDockerfile(docker_file=docker_expect_file)
     

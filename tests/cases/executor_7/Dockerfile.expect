@@ -2,10 +2,6 @@
 # It is not intended for manual editing.
 
 FROM jinaai/jina:3.6.10-py39-perf        
-ARG AUTH_TOKEN
-ARG TOKEN
-ENV AUTH_TOKEN=$AUTH_TOKEN
-ENV TOKEN=$TOKEN
 
 # install the third-party requirements
 RUN  "the first stage" 
@@ -13,12 +9,8 @@ ENTRYPOINT ["jina", "executor", "--uses", "config.yml"]
 
 
 FROM jinaai/jina:3.6.10-py39-perf     
-ARG AUTH_TOKEN
-ARG TOKEN
-ENV AUTH_TOKEN=$AUTH_TOKEN
-ENV TOKEN=$TOKEN
 
 # install the third-party requirements
-RUN  "the second stage" 
+RUN --mount=type=secret,id=DOMAIN             --mount=type=secret,id=REPO             export DOMAIN="$(cat /run/secrets/DOMAIN)"             export REPO="$(cat /run/secrets/REPO)"             &&    pip install --no-cache-dir -r requirements.txt
 
 ENTRYPOINT ["jina", "executor", "--uses", "config.yml"]

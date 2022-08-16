@@ -11,6 +11,6 @@ ENTRYPOINT ["jina", "executor", "--uses", "config.yml"]
 FROM jinaai/jina:3.6.10-py39-perf     
 
 # install the third-party requirements
-RUN  "the second stage" 
+RUN  pip install --no-cache-dir -r requirements.txt
 
 ENTRYPOINT ["jina", "executor", "--uses", "config.yml"]
