@@ -7,7 +7,7 @@ from textwrap import dedent
 from typing import Dict, List
 import re
 RUN_VAR_RE = re.compile(r"(?P<var>(?P<name>^RUN))")
-REQUIREMENTS_VAR_RE = re.compile(r"(?P<var>(?P<name>.+requirements.txt+))")
+REQUIREMENTS_TXT_FILE = re.compile(r"(?P<var>(?P<name>.+requirements.txt+))")
 
 from dockerfile_parse import DockerfileParser
 
@@ -63,9 +63,9 @@ class ExecutorDockerfile:
 
         for index, line in enumerate(self._parser.lines):
             strip_line = line.strip()
-            if RUN_VAR_RE.match(strip_line) and REQUIREMENTS_VAR_RE.match(strip_line):
-                replaceLine = line.replace('RUN', f'RUN {build_env_str} ')
-                self._parser.content = self._parser.content.replace(line, replaceLine)
+            if RUN_VAR_RE.match(strip_line) and REQUIREMENTS_TXT_FILE.match(strip_line):
+                replace_line = line.replace('RUN', f'RUN {build_env_str} ')
+                self._parser.content = self._parser.content.replace(line, replace_line)
 
     def add_apt_installs(self, tools):
         instruction_template = dedent(
