@@ -46,7 +46,6 @@ class ExecutorDockerfile:
         return self.content
     
     def insert_build_env(self, build_env):
-        
         build_env_str = ''
         for index, env in enumerate(build_env):
             build_env_str += dedent(
@@ -54,7 +53,6 @@ class ExecutorDockerfile:
             --mount=type=secret,id={env} \
             """
         )
-
         for index, env in enumerate(build_env):
             build_env_str += dedent(
             f"""\
@@ -68,8 +66,6 @@ class ExecutorDockerfile:
             if RUN_VAR_RE.match(strip_line) and REQUIREMENTS_VAR_RE.match(strip_line):
                 replaceLine = line.replace('RUN', f'RUN {build_env_str} ')
                 self._parser.content = self._parser.content.replace(line, replaceLine)
-
-        print('---self._parser.content---', self._parser.content)
 
     def add_apt_installs(self, tools):
         instruction_template = dedent(
