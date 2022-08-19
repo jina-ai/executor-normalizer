@@ -4,7 +4,7 @@
 FROM jinaai/jina:3.6.10-py39-perf        
 
 # install the third-party requirements
-RUN  "the first stage" 
+RUN  pip install .
 ENTRYPOINT ["jina", "executor", "--uses", "config.yml"]
 
 

@@ -6,8 +6,8 @@ from posixpath import basename
 from textwrap import dedent
 from typing import Dict, List
 import re
+
 RUN_VAR_RE = re.compile(r"(?P<var>(?P<name>^RUN))")
-REQUIREMENTS_TXT_FILE = re.compile(r"(?P<var>(?P<name>.+requirements.txt+))")
 
 from dockerfile_parse import DockerfileParser
 
@@ -49,22 +49,18 @@ class ExecutorDockerfile:
         build_env_str = ''
         for index, env in enumerate(build_env):
             build_env_str += dedent(
-            f"""\
-            --mount=type=secret,id={env} \
-            """
+            f' --mount=type=secret,id={env} '
         )
         for index, env in enumerate(build_env):
             build_env_str += dedent(
-            f"""\
-            export {env}="$(cat /run/secrets/{env})" \
-            """
+            f' export {env}=\"$(cat /run/secrets/{env})\" '
         )
-        build_env_str += '&& '
+        build_env_str += ' && '
 
         for index, line in enumerate(self._parser.lines):
             strip_line = line.strip()
-            if RUN_VAR_RE.match(strip_line) and REQUIREMENTS_TXT_FILE.match(strip_line):
-                replace_line = line.replace('RUN', f'RUN {build_env_str} ')
+            if RUN_VAR_RE.match(strip_line):
+                replace_line = line.replace('RUN', f'RUN {build_env_str}')
                 self._parser.content = self._parser.content.replace(line, replace_line)
 
     def add_apt_installs(self, tools):
