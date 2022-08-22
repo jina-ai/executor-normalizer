@@ -63,21 +63,19 @@ def test_load_dockerfile(build_env, docker_file, docker_expect_file):
     parser.insert_build_env(build_env)
 
     expect_parser = ExecutorDockerfile(docker_file=docker_expect_file)
-     
+    
     assert str(parser) == str(expect_parser)
 
-    if re.match('case1', str(docker_file)) is not None: 
-        assert len(parser.parent_images) == 1
-        assert parser.baseimage == 'jinaai/jina:2.0-perf'
-        assert parser.entrypoint == '["jina", "executor", "--uses", "config.yml"]'
-        assert (
-            parser.lines[-1].strip()
-            == 'ENTRYPOINT ["jina", "executor", "--uses", "config.yml"]'
-        )
-
-        parser.entrypoint = ['jina', 'pod', '--uses']
-        assert parser.entrypoint == '["jina", "pod", "--uses"]'
-        assert parser.lines[-1].strip() == 'ENTRYPOINT ["jina", "pod", "--uses"]'
+    assert len(parser.parent_images) == 1
+    assert parser.baseimage == 'jinaai/jina:2.0-perf'
+    assert parser.entrypoint == '["jina", "executor", "--uses", "config.yml"]'
+    assert (
+        parser.lines[-1].strip()
+        == 'ENTRYPOINT ["jina", "executor", "--uses", "config.yml"]'
+    )
+    parser.entrypoint = ['jina', 'pod', '--uses']
+    assert parser.entrypoint == '["jina", "pod", "--uses"]'
+    assert parser.lines[-1].strip() == 'ENTRYPOINT ["jina", "pod", "--uses"]'
 
 
 def test_dump(exe_dockerfile):
