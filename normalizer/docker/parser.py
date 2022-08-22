@@ -6,7 +6,8 @@ from posixpath import basename
 from textwrap import dedent
 from typing import Dict, List
 import re
-FROM_VAR_RE = re.compile(r"(?P<var>(?P<name>FROM .*))")
+
+RUN_VAR_RE = re.compile(r"(?P<var>(?P<name>^RUN))")
 
 from dockerfile_parse import DockerfileParser
 
@@ -44,46 +45,23 @@ class ExecutorDockerfile:
     def __str__(self):
         return self.content
     
-    def get_build_args_envs(self, build_args_envs): 
-        build_args = '';
-        build_args_line_num = 0;
-        for index, item in enumerate(build_args_envs):
-            build_args_line_num += 1
-            build_args += dedent(
-            f"""\
-            ARG {item}
-            """
+    def insert_build_env(self, build_env):
+        build_env_str = ''
+        for index, env in enumerate(build_env):
+            build_env_str += dedent(
+            f' --mount=type=secret,id={env} '
         )
-        build_envs = '';
-        build_envs_line_num = 0
-        for index, item in enumerate(build_args_envs):
-            build_envs_line_num += 1
-            build_envs += dedent(
-            f"""\
-            ENV {item}=${item}
-            """
+        for index, env in enumerate(build_env):
+            build_env_str += dedent(
+            f' export {env}=\"$(cat /run/secrets/{env})\" '
         )
-        return (build_args, build_envs, build_args_line_num, build_envs_line_num)
-    
-    def insert_build_args_envs(self, build_args_envs):
-        build_args, build_envs, build_args_line_num, build_envs_line_num = self.get_build_args_envs(build_args_envs)
-        build_args_envs_line_num = 0;
-        build_args_envs_str = '';
-        if len(build_args): 
-            build_args_envs_str += build_args
-            build_args_envs_line_num += build_args_line_num
-        
-        if len(build_envs): 
-            build_args_envs_str += build_envs
-            build_args_envs_line_num += build_envs_line_num
+        build_env_str += ' && '
 
-        if len(build_args_envs_str):
-            insert_num = 0
-            for index, line in enumerate(self._parser.lines):
-                if (FROM_VAR_RE.match(line) is not None):
-                    insert_line_num = index + insert_num * build_args_envs_line_num + 1
-                    self._parser.add_lines_at(insert_line_num, build_args_envs_str)
-                    insert_num += 1
+        for index, line in enumerate(self._parser.lines):
+            strip_line = line.strip()
+            if RUN_VAR_RE.match(strip_line):
+                replace_line = line.replace('RUN', f'RUN {build_env_str}')
+                self._parser.content = self._parser.content.replace(line, replace_line)
 
     def add_apt_installs(self, tools):
         instruction_template = dedent(

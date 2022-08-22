@@ -32,7 +32,7 @@ def normalize(
             block_data.package_path,
             meta=block_data.meta,
             env=block_data.env,
-            build_args_envs=block_data.build_args_envs
+            build_env=block_data.build_env
         )
 
     except Exception as ex:

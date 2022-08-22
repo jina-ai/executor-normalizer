@@ -368,7 +368,7 @@ def normalize(
     work_path: 'pathlib.Path',
     meta: Dict = {'jina': '2'},
     env: Dict = {},
-    build_args_envs: Dict = {},
+    build_env: Dict = {},
     dry_run: bool = False,
     **kwargs,
 ) -> ExecutorModel:
@@ -377,6 +377,7 @@ def normalize(
     :param work_path: the executor folder where it located
     :param meta: the version info of the Jina to work with
     :param env: the environment variables the Jina works with
+    :param build_env: the environment variables in use set in build steps
     :param dry_run: if True, dry_run the file dumps
 
     :return: normalized Executor model
@@ -587,8 +588,8 @@ def normalize(
             docker_file=dockerfile_path,
             build_args={'JINA_VERSION': f'{jina_version}'},
         )
-        if build_args_envs and len(build_args_envs.keys()):
-            dockerfile.insert_build_args_envs(build_args_envs)
+        if build_env and isinstance(build_env, dict) and len(build_env.keys()):
+            dockerfile.insert_build_env(build_env)
         # if dockerfile.is_multistage():
         #     # Don't support multi-stage Dockerfie Optimization
         #     return
@@ -608,8 +609,8 @@ def normalize(
         # if len(base_images) > 0:
         #     logger.debug(f'=> use base image: {base_images}')
         #     dockerfile.baseimage = base_images.pop()
-        if build_args_envs and len(build_args_envs.keys()):
-            dockerfile.insert_build_args_envs(build_args_envs)
+        if build_env and isinstance(build_env, dict) and len(build_env.keys()):
+            dockerfile.insert_build_env(build_env)
 
         dockerfile.add_work_dir()
         # dockerfile._parser.add_lines(f'RUN pip install jina=={jina_version}')

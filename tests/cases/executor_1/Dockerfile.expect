@@ -2,10 +2,6 @@
 # It is not intended for manual editing.
 
 FROM jinaai/jina:2-py37-perf
-ARG AUTH_TOKEN
-ARG TOKEN
-ENV AUTH_TOKEN=$AUTH_TOKEN
-ENV TOKEN=$TOKEN
 
 # setup the workspace
 COPY . /workspace
