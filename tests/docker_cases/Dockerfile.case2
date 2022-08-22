@@ -1,0 +1,10 @@
+FROM jinaai/jina:2.0-perf
+
+COPY . /workspace
+WORKDIR /workspace
+
+RUN  pip install \
+--no-cache-dir \
+-r requirements.txt
+
+ENTRYPOINT ["jina", "executor", "--uses", "config.yml"]
