@@ -405,6 +405,7 @@ def normalize(
         )
 
     dockerfile_path = work_path / 'Dockerfile'
+    manifest_cfg = None
     manifest_path = work_path / 'manifest.yml'
     config_path = work_path / 'config.yml'
     readme_path = work_path / 'README.md'
@@ -424,7 +425,7 @@ def normalize(
         if class_name is None:
             raise Exception('Not found jtype in config.yml')
         
-        metas_py_modules = config.get('metas', {}).get('py_modules', None);
+        metas_py_modules = config.get('metas', {}).get('py_modules', None)
         root_py_modules = config.get('py_modules', None)
 
         if metas_py_modules and root_py_modules:
@@ -455,6 +456,14 @@ def normalize(
                                     py_glob.append(extended_path)
                                     break
 
+        # checking if manifest configuration is available in config
+        if 'manifest' in config:
+            manifest_cfg = config_path
+
+        # if manifest configuration is not available, try loading from file
+        if manifest_cfg is None and manifest_path.exists():
+            manifest_cfg = manifest_path
+
     else:
         py_glob = list(work_path.glob('*.py')) + list(work_path.glob('executor/*.py'))
 
@@ -462,7 +471,7 @@ def normalize(
 
     completeness = {
         'Dockerfile': dockerfile_path,
-        'manifest.yml': manifest_path,
+        'manifest': manifest_cfg,
         'config.yml': config_path,
         'README.md': readme_path,
         'requirements.txt': requirements_path,
@@ -473,7 +482,7 @@ def normalize(
     logger.info(
         f'=> checking executor repository ...\n'
         + '\n'.join(
-            f'\t{colored("✓", "green") if (v if isinstance(v, list) else v.exists()) else colored("✗", "red"):>4} {k:<20} {v}'
+            f'\t{colored("✓", "green") if (None if v is None else v if isinstance(v, list) else v.exists()) else colored("✗", "red"):>4} {k:<20} {v}'
             for k, v in completeness.items()
         )
         + '\n'
@@ -481,7 +490,7 @@ def normalize(
 
     hubble_score_metrics = {
         'dockerfile_exists': dockerfile_path.exists(),
-        'manifest_exists': manifest_path.exists(),
+        'manifest_exists':  manifest_cfg is not None,
         'config_exists': config_path.exists(),
         'readme_exists': readme_path.exists(),
         'requirements_exists': requirements_path.exists(),
