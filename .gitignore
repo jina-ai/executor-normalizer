@@ -147,6 +147,8 @@ tests/cases/executor_3/config.yml
 tests/cases/executor_3/Dockerfile
 tests/cases/executor_4/__jina__.Dockerfile
 tests/cases/executor_4/Dockerfile
+tests/cases/executor_6/__jina__.Dockerfile
+tests/cases/executor_6/Dockerfile
 tests/cases/executor_7/__jina__.Dockerfile
 tests/cases/nested/__jina__.Dockerfile
 tests/cases/nested/config.yml

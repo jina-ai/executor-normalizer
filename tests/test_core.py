@@ -107,16 +107,22 @@ def test_get_executor_args(package_path, expected_path):
                 'REPO': 'REPO'
             }
         ),
+         (
+            Path(__file__).parent / 'cases' / 'executor_2',
+            None
+        ),
+        (
+            Path(__file__).parent / 'cases' / 'executor_6',
+            { 
+                'DOMAIN': "DOMAIN",
+            }
+        ),
         (
             Path(__file__).parent / 'cases' / 'executor_7',
             { 
                 'DOMAIN': "DOMAIN",
                 'REPO': 'REPO'
             }
-        ),
-        (
-            Path(__file__).parent / 'cases' / 'executor_2',
-            None
         ),
     ],
 )
