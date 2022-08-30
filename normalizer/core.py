@@ -609,8 +609,6 @@ def normalize(
         # if len(base_images) > 0:
         #     logger.debug(f'=> use base image: {base_images}')
         #     dockerfile.baseimage = base_images.pop()
-        if build_env and isinstance(build_env, dict) and len(build_env.keys()):
-            dockerfile.insert_build_env(build_env)
 
         dockerfile.add_work_dir()
         # dockerfile._parser.add_lines(f'RUN pip install jina=={jina_version}')
@@ -620,6 +618,9 @@ def normalize(
 
         if requirements_path.exists():
             dockerfile.add_pip_install()
+
+        if build_env and isinstance(build_env, dict) and len(build_env.keys()):
+            dockerfile.insert_build_env(build_env)
 
         # if len(test_glob) > 0:
         #     dockerfile.add_unitest()
