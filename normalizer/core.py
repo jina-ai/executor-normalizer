@@ -456,11 +456,13 @@ def normalize(
                                     py_glob.append(extended_path)
                                     break
 
-        # checking if manifest configuration is available in config
-        if 'manifest' in config:
-            manifest_cfg = config_path
+        # checking if metas configuration is available in config
+        if 'metas' in config:
+            metas_keys = config['metas']
+            if 'name' in metas_keys:
+                manifest_cfg = config_path
 
-        # if manifest configuration is not available, try loading from file
+        # if metas configuration is not available, try loading the manifest file
         if manifest_cfg is None and manifest_path.exists():
             manifest_cfg = manifest_path
 
