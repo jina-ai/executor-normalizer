@@ -574,6 +574,7 @@ def normalize(
             if manifest_cfg is not None:
                 config = yaml.safe_load(open(config_path, 'r'))
                 metas_cfg = {**config.get('metas', {}), **manifest_cfg}
+                config['metas'] = metas_cfg
                 with open(config_path, 'w') as f:
                     yaml.dump(config, f, sort_keys=False)
 
