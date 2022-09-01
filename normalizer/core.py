@@ -406,12 +406,22 @@ def normalize(
 
     dockerfile_path = work_path / 'Dockerfile'
     manifest_cfg = None
+    manifest_location = None
     manifest_path = work_path / 'manifest.yml'
+    manifest_keys = ['name', 'description', 'url', 'keywords']
     config_path = work_path / 'config.yml'
     readme_path = work_path / 'README.md'
     requirements_path = work_path / 'requirements.txt'
     gpu_dockerfile_path = work_path / 'Dockerfile.gpu'
     test_glob = list(work_path.glob('tests/test_*.py'))
+
+    # load manifest configuration
+    if manifest_path.exists():
+        manifest_location = manifest_path
+        raw_manifest_cfg = yaml.safe_load(open(manifest_path, 'r'))
+        parsed_manifest_cfg = {k: v for k, v in raw_manifest_cfg.items() if k in manifest_keys}
+        if len(parsed_manifest_cfg) > 0:
+            manifest_cfg = parsed_manifest_cfg
 
     class_name = None
     py_glob = []
@@ -456,16 +466,18 @@ def normalize(
                                     py_glob.append(extended_path)
                                     break
 
-        # checking if metas configuration is available in config
-        if 'metas' in config:
-            metas_keys = config['metas']
-            if 'name' in metas_keys:
-                manifest_cfg = config_path
-
-        # if metas configuration is not available, try loading the manifest file
-        if manifest_cfg is None and manifest_path.exists():
-            manifest_cfg = manifest_path
-
+        # appending manifest.yml into config.yml
+        # this is done due to deprectation of manifest.yml
+        if manifest_cfg is not None:
+            metas_cfg = {**config.get('metas', {}), **manifest_cfg}
+            config['metas'] = metas_cfg
+            if not dry_run:
+                with open(config_path, 'w') as f:
+                    yaml.dump(config, f, sort_keys=False)
+        else:
+            metas_cfg = config.get('metas', {})
+            if 'name' in metas_cfg:
+                manifest_path = config_path
     else:
         py_glob = list(work_path.glob('*.py')) + list(work_path.glob('executor/*.py'))
 
@@ -473,7 +485,7 @@ def normalize(
 
     completeness = {
         'Dockerfile': dockerfile_path,
-        'manifest': manifest_cfg,
+        'manifest': manifest_path,
         'config.yml': config_path,
         'README.md': readme_path,
         'requirements.txt': requirements_path,
@@ -492,7 +504,7 @@ def normalize(
 
     hubble_score_metrics = {
         'dockerfile_exists': dockerfile_path.exists(),
-        'manifest_exists':  manifest_cfg is not None,
+        'manifest_exists':  manifest_path is not None,
         'config_exists': config_path.exists(),
         'readme_exists': readme_path.exists(),
         'requirements_exists': requirements_path.exists(),
@@ -558,6 +570,12 @@ def normalize(
             # dump config.yml
             with open(config_path, 'w') as f:
                 f.write(config_content)
+
+            if manifest_cfg is not None:
+                config = yaml.safe_load(open(config_path, 'r'))
+                metas_cfg = {**config.get('metas', {}), **manifest_cfg}
+                with open(config_path, 'w') as f:
+                    yaml.dump(config, f, sort_keys=False)
 
     if requirements_path.exists():
         imports = [
