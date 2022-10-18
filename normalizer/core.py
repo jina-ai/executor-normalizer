@@ -203,17 +203,17 @@ def inspect_executors(
                 if class_name:
                     if class_name != class_def.name:
                         continue
-
-                base_names = []
-                for base_class in class_def.bases:
-                    # if the class looks like class MyExecutor(Executor)
-                    if isinstance(base_class, ast.Name):
-                        base_names.append(base_class.id)
-                    # if the class looks like class MyExecutor(jina.Executor):
-                    if isinstance(base_class, ast.Attribute):
-                        base_names.append(base_class.attr)
-                if 'Executor' not in base_names:
-                    continue
+                else:
+                    base_names = []
+                    for base_class in class_def.bases:
+                        # if the class looks like class MyExecutor(Executor)
+                        if isinstance(base_class, ast.Name):
+                            base_names.append(base_class.id)
+                        # if the class looks like class MyExecutor(jina.Executor):
+                        if isinstance(base_class, ast.Attribute):
+                            base_names.append(base_class.attr)
+                    if 'Executor' not in base_names:
+                        continue
 
                 init = None
                 endpoints = []
