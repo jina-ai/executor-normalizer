@@ -168,3 +168,43 @@ def test_prelude():
     #     ['tensorflow/tensorflow:2.5.0', 'pytorch/pytorch:1.6.0-cuda10.2-cudnn7-runtime']
     # )
     assert tools == set(['git'])
+
+
+@pytest.mark.parametrize(
+    'package_path, build_env, dockerfile',
+    [   
+        (
+            Path(__file__).parent / 'cases' / 'executor_7',
+            { 
+                'DOMAIN': "DOMAIN",
+                'REPO': 'REPO'
+            },
+            'Dockerfile.custom'
+        ),
+    ],
+)
+def test_normalized_custom_dockerfile(package_path, build_env, dockerfile):
+    dockerfile_path = Path(package_path / dockerfile) 
+    dockerfile_expected_path = Path(package_path / 'Dockerfile.expect')
+
+    originDockerfileStr = None;
+    if dockerfile_path.exists():
+        with open(dockerfile_path, 'r') as fp:
+            originDockerfileStr = str(fp.read())
+
+    core.normalize(package_path, build_env=build_env, dockerfile=dockerfile , dry_run=False)
+
+
+    dockerfileStr = None
+    with open(dockerfile_path, 'r') as fp:
+        dockerfileStr = str(fp.read())
+    
+    dockerfileExpectedStr = ''
+    with open(dockerfile_expected_path, 'r') as fp:
+        dockerfileExpectedStr = str(fp.read())
+
+    assert dockerfileStr == dockerfileExpectedStr
+
+    if originDockerfileStr:
+        with open(dockerfile_path, 'w') as fp:
+            fp.write(originDockerfileStr)

@@ -39,6 +39,7 @@ class PackagePayload(BaseModel):
     meta: Optional[Dict] = {'jina': 'master'}
     env: Optional[Dict] = {}
     build_env: Optional[Dict] = {}
+    dockerfile: Optional[str] = None
 
 
 class NormalizeResult(BaseModel):
