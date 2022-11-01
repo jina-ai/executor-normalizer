@@ -405,7 +405,7 @@ def normalize(
             f'The folder "{work_path}" does not exist, can not normalize'
         )
 
-    dockerfile_path = work_path / dockerfile if dockerfile else work_path / 'Dockerfile'
+    dockerfile_path = (work_path / dockerfile) if dockerfile else (work_path / 'Dockerfile')
     manifest_cfg = None
     manifest_location = None
     manifest_path = work_path / 'manifest.yml'
