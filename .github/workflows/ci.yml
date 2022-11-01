@@ -19,6 +19,6 @@ jobs:
       - name: Run tests
         run: pytest --cov=normalizer --cov=generator  --cov-report=xml
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v2
+        uses: codecov/codecov-action@v3
         with:
           files: ./coverage.xml
