@@ -370,7 +370,7 @@ def normalize(
     env: Dict = {},
     build_env: Dict = {},
     dry_run: bool = False,
-    dockerfile: str = None,
+    dockerfile: Optional[str] = None,
     **kwargs,
 ) -> ExecutorModel:
     """Normalize the executor package.
