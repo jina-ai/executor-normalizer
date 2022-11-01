@@ -32,7 +32,8 @@ def normalize(
             block_data.package_path,
             meta=block_data.meta,
             env=block_data.env,
-            build_env=block_data.build_env
+            build_env=block_data.build_env,
+            dockerfile=block_data.dockerfile
         )
 
     except Exception as ex:
