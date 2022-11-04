@@ -371,6 +371,7 @@ def normalize(
     build_env: Dict = {},
     dry_run: bool = False,
     dockerfile: Optional[str] = None,
+    build_env_path: Optional['pathlib.Path'] = None,
     **kwargs,
 ) -> ExecutorModel:
     """Normalize the executor package.
@@ -619,8 +620,11 @@ def normalize(
             docker_file=dockerfile_path,
             build_args={'JINA_VERSION': f'{jina_version}'},
         )
-        if build_env and isinstance(build_env, dict) and len(build_env.keys()):
+        if build_env and isinstance(build_env, dict):
             dockerfile.insert_build_env(build_env)
+
+        if build_env_path and build_env_path.exists():
+            dockerfile.insert_build_env_path(build_env_path)
         # if dockerfile.is_multistage():
         #     # Don't support multi-stage Dockerfie Optimization
         #     return
@@ -650,8 +654,11 @@ def normalize(
         if requirements_path.exists():
             dockerfile.add_pip_install()
 
-        if build_env and isinstance(build_env, dict) and len(build_env.keys()):
+        if build_env and isinstance(build_env, dict):
             dockerfile.insert_build_env(build_env)
+
+        if build_env_path and build_env_path.exists():
+            dockerfile.insert_build_env_path(build_env_path)
 
         # if len(test_glob) > 0:
         #     dockerfile.add_unitest()

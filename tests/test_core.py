@@ -208,3 +208,37 @@ def test_normalized_custom_dockerfile(package_path, build_env, dockerfile):
     if originDockerfileStr:
         with open(dockerfile_path, 'w') as fp:
             fp.write(originDockerfileStr)
+
+
+@pytest.mark.parametrize(
+    'package_path, build_env_path',
+    [   
+         (
+            Path(__file__).parent / 'cases' / 'executor_7',
+            Path(__file__).parent / 'cases' / 'build_env',
+        )
+    ],
+)
+def test_compare_dockerfile_env_vars_form_path(package_path, build_env_path):
+
+    dockerfile_path = Path(package_path / 'Dockerfile') 
+
+    origin_dockerfile_str = None;
+    if dockerfile_path.exists():
+        with open(dockerfile_path, 'r') as fp:
+            origin_dockerfile_str = str(fp.read())
+
+    core.normalize(package_path, build_env_path=build_env_path, dry_run=False)
+    assert dockerfile_path.exists() == True;
+
+    dockerfileStr = None
+    with open(dockerfile_path, 'r') as fp:
+        dockerfileStr = str(fp.read())
+    
+    if origin_dockerfile_str:
+        with open(dockerfile_path, 'w') as fp:
+            fp.write(origin_dockerfile_str)
+    else:
+        os.remove(dockerfile_path)
+    
+    assert f'--mount=type=secret,id=build_env,dst={str(build_env_path)}' in dockerfileStr

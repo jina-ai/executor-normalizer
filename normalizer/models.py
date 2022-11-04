@@ -40,6 +40,7 @@ class PackagePayload(BaseModel):
     env: Optional[Dict] = {}
     build_env: Optional[Dict] = {}
     dockerfile: Optional[str] = None
+    build_env_path: Optional[Path] = None
 
 
 class NormalizeResult(BaseModel):
