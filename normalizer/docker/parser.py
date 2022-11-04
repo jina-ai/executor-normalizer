@@ -9,18 +9,18 @@ from typing import Dict, List
 
 from normalizer import docker
 
-RUN_VAR_RE = re.compile(r"(?P<var>(?P<name>^RUN))")
+RUN_VAR_RE = re.compile(r'(?P<var>(?P<name>^RUN))')
 
 from dockerfile_parse import DockerfileParser
 
 
 class ExecutorDockerfile:
     def __init__(
-        self, docker_file: "Path" = None, build_args: Dict = {"JINA_VERSION": "master"}
+        self, docker_file: 'Path' = None, build_args: Dict = {'JINA_VERSION': 'master'}
     ):
         self._buffer = io.BytesIO()
         if docker_file and docker_file.exists():
-            self._buffer.write(docker_file.open("rb").read())
+            self._buffer.write(docker_file.open('rb').read())
             self._parser = DockerfileParser(
                 fileobj=self._buffer, env_replace=True, build_args=build_args
             )
@@ -41,39 +41,39 @@ class ExecutorDockerfile:
             )
 
             self._parser.content = dockerfile_template.format(
-                build_args["JINA_VERSION"]
+                build_args['JINA_VERSION']
             )
 
     def __str__(self):
         return self.content
 
     def insert_build_env(self, build_env: Dict):
-        build_env_str = ""
+        build_env_str = ''
         for index, env in enumerate(build_env):
-            build_env_str += dedent(f" --mount=type=secret,id={env} ")
+            build_env_str += dedent(f' --mount=type=secret,id={env} ')
         for index, env in enumerate(build_env):
-            build_env_str += dedent(f' export {env}="$(cat /run/secrets/{env})" ')
+            build_env_str += dedent(f' export {env}=\"$(cat /run/secrets/{env})\" ')
         build_env_str += " && "
 
         for index, line in enumerate(self._parser.lines):
             strip_line = line.strip()
             if RUN_VAR_RE.match(strip_line):
-                replace_line = line.replace("RUN", f"RUN {build_env_str}")
+                replace_line = line.replace('RUN', f'RUN {build_env_str}')
                 self._parser.content = self._parser.content.replace(line, replace_line)
 
     def insert_build_env_path(self, build_env_path: pathlib.Path):
-        build_env_str = ""
+        build_env_str = ''
         build_env_path_str = str(build_env_path)
 
         build_env_str += dedent(
-            f" --mount=type=secret,id={build_env_path.stem},dst={build_env_path} . {build_env_path_str} "
+            f' --mount=type=secret,id={build_env_path.stem},dst={build_env_path} . {build_env_path_str} '
         )
-        build_env_str += " && "
+        build_env_str += ' && '
 
         for index, line in enumerate(self._parser.lines):
             strip_line = line.strip()
             if RUN_VAR_RE.match(strip_line):
-                replace_line = line.replace("RUN", f"RUN {build_env_str}")
+                replace_line = line.replace('RUN', f'RUN {build_env_str}')
                 self._parser.content = self._parser.content.replace(line, replace_line)
 
     def add_apt_installs(self, tools):
@@ -85,7 +85,7 @@ class ExecutorDockerfile:
 
             """
         )
-        content = instruction_template.format(" ".join(tools))
+        content = instruction_template.format(' '.join(tools))
         self._parser.content += content
 
     def add_work_dir(self):
@@ -149,10 +149,10 @@ class ExecutorDockerfile:
         """
         value = None
         for insndesc in self._parser.structure:
-            if insndesc["instruction"] == "FROM":  # new stage, reset
+            if insndesc['instruction'] == 'FROM':  # new stage, reset
                 value = None
-            elif insndesc["instruction"].upper() == "ENTRYPOINT":
-                value = insndesc["value"].strip()
+            elif insndesc['instruction'].upper() == 'ENTRYPOINT':
+                value = insndesc['value'].strip()
         return value
 
     @entrypoint.setter
@@ -162,12 +162,12 @@ class ExecutorDockerfile:
         """
         cmd = None
         for insndesc in self._parser.structure:
-            if insndesc["instruction"] == "FROM":  # new stage, reset
+            if insndesc['instruction'] == 'FROM':  # new stage, reset
                 cmd = None
-            elif insndesc["instruction"].upper() == "ENTRYPOINT":
+            elif insndesc['instruction'].upper() == 'ENTRYPOINT':
                 cmd = insndesc
 
-        new_cmd = "ENTRYPOINT " + "[" + ", ".join([f'"{_}"' for _ in values]) + "]"
+        new_cmd = 'ENTRYPOINT ' + '[' + ', '.join([f'"{_}"' for _ in values]) + ']'
         if cmd:
             self._parser.add_lines_at(cmd, new_cmd, replace=True)
         else:
@@ -179,12 +179,12 @@ class ExecutorDockerfile:
         """
         cmd = None
         for insndesc in self._parser.structure:
-            if insndesc["instruction"] == "FROM":  # new stage, reset
+            if insndesc['instruction'] == 'FROM':  # new stage, reset
                 cmd = None
-            elif insndesc["instruction"].upper() == "ENTRYPOINT":
+            elif insndesc['instruction'].upper() == 'ENTRYPOINT':
                 cmd = insndesc
 
-        new_cmd = "ENTRYPOINT " + value
+        new_cmd = 'ENTRYPOINT ' + value
         if cmd:
             self._parser.add_lines_at(cmd, new_cmd, replace=True)
         else:
@@ -210,5 +210,5 @@ class ExecutorDockerfile:
         return self._buffer.getvalue().decode()
 
     def dump(self, dockerfile: str):
-        with open(dockerfile, "wb") as fp:
+        with open(dockerfile, 'wb') as fp:
             fp.write(self._buffer.getvalue())
