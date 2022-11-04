@@ -371,7 +371,7 @@ def normalize(
     build_env: Dict = {},
     dry_run: bool = False,
     dockerfile: Optional[str] = None,
-    build_env_path: Optional['pathlib.Path'] = None,
+    build_env_file: Optional[str] = None,
     **kwargs,
 ) -> ExecutorModel:
     """Normalize the executor package.
@@ -623,8 +623,8 @@ def normalize(
         if build_env and isinstance(build_env, dict) and len(build_env.keys()):
             dockerfile.insert_build_env(build_env)
 
-        if build_env_path and build_env_path.exists():
-            dockerfile.insert_build_env_path(build_env_path)
+        if build_env_file:
+            dockerfile.insert_build_env_file(build_env_file)
         # if dockerfile.is_multistage():
         #     # Don't support multi-stage Dockerfie Optimization
         #     return
@@ -657,8 +657,8 @@ def normalize(
         if build_env and isinstance(build_env, dict) and len(build_env.keys()):
             dockerfile.insert_build_env(build_env)
 
-        if build_env_path and build_env_path.exists():
-            dockerfile.insert_build_env_path(build_env_path)
+        if build_env_file:
+            dockerfile.insert_build_env_file(build_env_file)
 
         # if len(test_glob) > 0:
         #     dockerfile.add_unitest()

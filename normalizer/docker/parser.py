@@ -61,12 +61,10 @@ class ExecutorDockerfile:
                 replace_line = line.replace('RUN', f'RUN {build_env_str}')
                 self._parser.content = self._parser.content.replace(line, replace_line)
 
-    def insert_build_env_path(self, build_env_path: pathlib.Path):
+    def insert_build_env_file(self, build_env_file: str):
         build_env_str = ''
-        build_env_path_str = str(build_env_path)
-
         build_env_str += dedent(
-            f' --mount=type=secret,id={build_env_path.stem},dst={build_env_path} . {build_env_path_str} '
+            f' --mount=type=secret,id={build_env_file} . run/secrets/{build_env_file} '
         )
         build_env_str += ' && '
 

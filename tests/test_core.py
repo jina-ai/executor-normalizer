@@ -211,29 +211,34 @@ def test_normalized_custom_dockerfile(package_path, build_env, dockerfile):
 
 
 @pytest.mark.parametrize(
-    'package_path, build_env_path',
+    'package_path, build_env_file',
     [   
          (
             Path(__file__).parent / 'cases' / 'executor_7',
-            Path(__file__).parent / 'cases' / 'build_env',
+            'build_env',
         )
     ],
 )
-def test_compare_dockerfile_env_vars_form_path(package_path, build_env_path):
+def test_compare_dockerfile_env_vars_form_path(package_path, build_env_file):
 
     dockerfile_path = Path(package_path / 'Dockerfile') 
+    dockerfile_expected_path = Path(package_path / 'Dockerfile.expect_file')
 
     origin_dockerfile_str = None;
     if dockerfile_path.exists():
         with open(dockerfile_path, 'r') as fp:
             origin_dockerfile_str = str(fp.read())
 
-    core.normalize(package_path, build_env_path=build_env_path, dry_run=False)
+    core.normalize(package_path, build_env_file=build_env_file, dry_run=False)
     assert dockerfile_path.exists() == True;
 
     dockerfileStr = None
     with open(dockerfile_path, 'r') as fp:
         dockerfileStr = str(fp.read())
+
+    dockerfileExpectedStr = ''
+    with open(dockerfile_expected_path, 'r') as fp:
+        dockerfileExpectedStr = str(fp.read())
     
     if origin_dockerfile_str:
         with open(dockerfile_path, 'w') as fp:
@@ -241,4 +246,4 @@ def test_compare_dockerfile_env_vars_form_path(package_path, build_env_path):
     else:
         os.remove(dockerfile_path)
     
-    assert f'--mount=type=secret,id=build_env,dst={str(build_env_path)}' in dockerfileStr
+    assert dockerfileExpectedStr == dockerfileStr

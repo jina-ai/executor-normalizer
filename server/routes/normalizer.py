@@ -33,7 +33,7 @@ def normalize(
             meta=block_data.meta,
             env=block_data.env,
             build_env=block_data.build_env,
-            build_env_path=block_data.build_env_path,
+            build_env_file=block_data.build_env_file,
             dockerfile=block_data.dockerfile
         )
 
