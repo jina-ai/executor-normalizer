@@ -1,13 +1,15 @@
 import io
-from re import template
-from normalizer import docker
+import pathlib
+import re
 from pathlib import Path
 from posixpath import basename
+from re import template
 from textwrap import dedent
 from typing import Dict, List
-import re
 
-RUN_VAR_RE = re.compile(r"(?P<var>(?P<name>^RUN))")
+from normalizer import docker
+
+RUN_VAR_RE = re.compile(r'(?P<var>(?P<name>^RUN))')
 
 from dockerfile_parse import DockerfileParser
 
@@ -44,16 +46,25 @@ class ExecutorDockerfile:
 
     def __str__(self):
         return self.content
-    
-    def insert_build_env(self, build_env):
+
+    def insert_build_env(self, build_env: Dict):
         build_env_str = ''
         for index, env in enumerate(build_env):
-            build_env_str += dedent(
-            f' --mount=type=secret,id={env} '
-        )
+            build_env_str += dedent(f' --mount=type=secret,id={env} ')
         for index, env in enumerate(build_env):
-            build_env_str += dedent(
-            f' export {env}=\"$(cat /run/secrets/{env})\" '
+            build_env_str += dedent(f' export {env}=\"$(cat /run/secrets/{env})\" ')
+        build_env_str += " && "
+
+        for index, line in enumerate(self._parser.lines):
+            strip_line = line.strip()
+            if RUN_VAR_RE.match(strip_line):
+                replace_line = line.replace('RUN', f'RUN {build_env_str}')
+                self._parser.content = self._parser.content.replace(line, replace_line)
+
+    def insert_build_env_file(self, build_env_file: str):
+        build_env_str = ''
+        build_env_str += dedent(
+            f' --mount=type=secret,id={build_env_file} . run/secrets/{build_env_file} '
         )
         build_env_str += ' && '
 
