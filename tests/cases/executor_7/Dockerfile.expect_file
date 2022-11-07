@@ -4,13 +4,13 @@
 FROM jinaai/jina:3.6.10-py39-perf        
 
 # install the third-party requirements
-RUN --mount=type=secret,id=build_env . run/secrets/build_env  &&   pip install .
+RUN --mount=type=secret,id=build_env . /run/secrets/build_env  &&   pip install .
 ENTRYPOINT ["jina", "executor", "--uses", "config.yml"]
 
 
 FROM jinaai/jina:3.6.10-py39-perf     
 
 # install the third-party requirements
-RUN --mount=type=secret,id=build_env . run/secrets/build_env  &&   pip install --no-cache-dir -r requirements.txt
+RUN --mount=type=secret,id=build_env . /run/secrets/build_env  &&   pip install --no-cache-dir -r requirements.txt
 
 ENTRYPOINT ["jina", "executor", "--uses", "config.yml"]

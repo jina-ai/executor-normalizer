@@ -64,7 +64,7 @@ class ExecutorDockerfile:
     def insert_build_env_file(self, build_env_file: str):
         build_env_str = ''
         build_env_str += dedent(
-            f' --mount=type=secret,id={build_env_file} . run/secrets/{build_env_file} '
+            f' --mount=type=secret,id={build_env_file} . /run/secrets/{build_env_file} '
         )
         build_env_str += ' && '
 
