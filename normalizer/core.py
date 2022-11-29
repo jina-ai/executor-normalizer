@@ -620,7 +620,6 @@ def normalize(
             build_args={'JINA_VERSION': f'{jina_version}'},
             syntax=dockerfile_syntax
         )
-        dockerfile.use_magic_shell_dockerfile_frontend()
 
         # if dockerfile.is_multistage():
         #     # Don't support multi-stage Dockerfie Optimization
