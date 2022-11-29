@@ -371,6 +371,7 @@ def normalize(
     dry_run: bool = False,
     dockerfile: Optional[str] = None,
     dockerfile_syntax: Optional[str] = None,
+    **_argv,
 ) -> ExecutorModel:
     """Normalize the executor package.
 
