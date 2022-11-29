@@ -1,3 +1,4 @@
+# syntax=jinahub/dockerfile:1.4.3-magic-shell
 FROM jinaai/jina:2.0-perf
 
 COPY . /workspace

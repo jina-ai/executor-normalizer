@@ -36,26 +36,31 @@ def test_baseimage(exe_dockerfile):
 
 
 @pytest.mark.parametrize(
-    'docker_file, docker_expect_file',
+    'docker_file, docker_expect_file, dockerfile_syntax',
     [
         (
             Path(__file__).parent / 'docker_cases' / 'Dockerfile.case1',
-            Path(__file__).parent / 'docker_cases' / 'Dockerfile.case1.expect'
+            Path(__file__).parent / 'docker_cases' / 'Dockerfile.case1.expect',
+            None
         ),
 
         (
             Path(__file__).parent / 'docker_cases' / 'Dockerfile.case2',
-            Path(__file__).parent / 'docker_cases' / 'Dockerfile.case2.expect'
+            Path(__file__).parent / 'docker_cases' / 'Dockerfile.case2.expect',
+            'jinahub/dockerfile:1.4.3-magic-shell'
         )
     ],
 )
-def test_load_dockerfile(docker_file, docker_expect_file):
+def test_load_dockerfile(docker_file, docker_expect_file, dockerfile_syntax):
 
     parser = ExecutorDockerfile(docker_file=docker_file)
 
     expect_parser = ExecutorDockerfile(docker_file=docker_expect_file)
 
     assert str(parser) == str(expect_parser)
+
+    assert parser.syntax == expect_parser.syntax
+    assert expect_parser.syntax == expect_parser.syntax
 
     assert len(parser.parent_images) == 1
     assert parser.baseimage == 'jinaai/jina:2.0-perf'
