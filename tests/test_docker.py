@@ -36,34 +36,25 @@ def test_baseimage(exe_dockerfile):
 
 
 @pytest.mark.parametrize(
-    'build_env, docker_file, docker_expect_file',
-    [   
+    'docker_file, docker_expect_file',
+    [
         (
-            { 
-            'AUTH_TOKEN': "AUTH_TOKEN",
-            'TOKEN': 'ghp_Nwh9o70GDSzs'
-            },
             Path(__file__).parent / 'docker_cases' / 'Dockerfile.case1',
             Path(__file__).parent / 'docker_cases' / 'Dockerfile.case1.expect'
         ),
 
         (
-            { 
-            'AUTH_TOKEN': "AUTH_TOKEN",
-            'TOKEN': 'ghp_Nwh9o70GDSzs'
-            },
             Path(__file__).parent / 'docker_cases' / 'Dockerfile.case2',
             Path(__file__).parent / 'docker_cases' / 'Dockerfile.case2.expect'
         )
     ],
 )
-def test_load_dockerfile(build_env, docker_file, docker_expect_file):
+def test_load_dockerfile(docker_file, docker_expect_file):
 
     parser = ExecutorDockerfile(docker_file=docker_file)
-    parser.insert_build_env(build_env)
 
     expect_parser = ExecutorDockerfile(docker_file=docker_expect_file)
-    
+
     assert str(parser) == str(expect_parser)
 
     assert len(parser.parent_images) == 1
