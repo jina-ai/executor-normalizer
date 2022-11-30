@@ -98,14 +98,11 @@ def test_get_executor_args(package_path, expected_path):
 
 
 @pytest.mark.parametrize(
-    'package_path, build_env',
-    [   
+    'package_path, dockerfile_syntax',
+    [
         (
             Path(__file__).parent / 'cases' / 'executor_1',
-            { 
-                'DOMAIN': "DOMAIN",
-                'REPO': 'REPO'
-            }
+            None
         ),
          (
             Path(__file__).parent / 'cases' / 'executor_2',
@@ -113,46 +110,41 @@ def test_get_executor_args(package_path, expected_path):
         ),
         (
             Path(__file__).parent / 'cases' / 'executor_6',
-            { 
-                'DOMAIN': "DOMAIN",
-            }
+            'jinahub/dockerfile:1.4.3-magic-shell'
         ),
         (
             Path(__file__).parent / 'cases' / 'executor_7',
-            { 
-                'DOMAIN': "DOMAIN",
-                'REPO': 'REPO'
-            }
+            'jinahub/dockerfile:1.4.3-magic-shell'
         ),
     ],
 )
-def test_compare_dockerfile_env_vars(package_path, build_env):
+def test_compare_dockerfile_syntax(package_path, dockerfile_syntax):
 
-    dockerfile_path = Path(package_path / 'Dockerfile') 
-    dockerfile_expected_path = Path(package_path / 'Dockerfile.expect') 
+    dockerfile_path = Path(package_path / 'Dockerfile')
+    dockerfile_expected_path = Path(package_path / 'Dockerfile.expect')
 
     originDockerfileStr = None;
     if dockerfile_path.exists():
         with open(dockerfile_path, 'r') as fp:
             originDockerfileStr = str(fp.read())
 
-    core.normalize(package_path, build_env=build_env, dry_run=False)
+    core.normalize(package_path, dockerfile_syntax=dockerfile_syntax, dry_run=False)
     assert dockerfile_path.exists() == True;
 
     dockerfileStr = None
     with open(dockerfile_path, 'r') as fp:
         dockerfileStr = str(fp.read())
-    
+
     dockerfileExpectedStr = ''
     with open(dockerfile_expected_path, 'r') as fp:
         dockerfileExpectedStr = str(fp.read())
-    
+
     if originDockerfileStr:
         with open(dockerfile_path, 'w') as fp:
             fp.write(originDockerfileStr)
     else:
         os.remove(dockerfile_path)
-    
+
     assert dockerfileExpectedStr == dockerfileStr
 
 
@@ -171,20 +163,17 @@ def test_prelude():
 
 
 @pytest.mark.parametrize(
-    'package_path, build_env, dockerfile',
-    [   
+    'package_path, dockerfile_syntax, dockerfile',
+    [
         (
             Path(__file__).parent / 'cases' / 'executor_7',
-            { 
-                'DOMAIN': "DOMAIN",
-                'REPO': 'REPO'
-            },
+            'jinahub/dockerfile:1.4.3-magic-shell',
             'Dockerfile.custom'
         ),
     ],
 )
-def test_normalized_custom_dockerfile(package_path, build_env, dockerfile):
-    dockerfile_path = Path(package_path / dockerfile) 
+def test_normalized_custom_dockerfile(package_path, dockerfile_syntax, dockerfile):
+    dockerfile_path = Path(package_path / dockerfile)
     dockerfile_expected_path = Path(package_path / 'Dockerfile.expect')
 
     originDockerfileStr = None;
@@ -192,13 +181,12 @@ def test_normalized_custom_dockerfile(package_path, build_env, dockerfile):
         with open(dockerfile_path, 'r') as fp:
             originDockerfileStr = str(fp.read())
 
-    core.normalize(package_path, build_env=build_env, dockerfile=dockerfile , dry_run=False)
-
+    core.normalize(package_path, dockerfile_syntax=dockerfile_syntax, dockerfile=dockerfile , dry_run=False)
 
     dockerfileStr = None
     with open(dockerfile_path, 'r') as fp:
         dockerfileStr = str(fp.read())
-    
+
     dockerfileExpectedStr = ''
     with open(dockerfile_expected_path, 'r') as fp:
         dockerfileExpectedStr = str(fp.read())
@@ -208,42 +196,3 @@ def test_normalized_custom_dockerfile(package_path, build_env, dockerfile):
     if originDockerfileStr:
         with open(dockerfile_path, 'w') as fp:
             fp.write(originDockerfileStr)
-
-
-@pytest.mark.parametrize(
-    'package_path, build_env_file',
-    [   
-         (
-            Path(__file__).parent / 'cases' / 'executor_7',
-            'build_env',
-        )
-    ],
-)
-def test_compare_dockerfile_env_vars_form_path(package_path, build_env_file):
-
-    dockerfile_path = Path(package_path / 'Dockerfile') 
-    dockerfile_expected_path = Path(package_path / 'Dockerfile.expect_file')
-
-    origin_dockerfile_str = None;
-    if dockerfile_path.exists():
-        with open(dockerfile_path, 'r') as fp:
-            origin_dockerfile_str = str(fp.read())
-
-    core.normalize(package_path, build_env_file=build_env_file, dry_run=False)
-    assert dockerfile_path.exists() == True;
-
-    dockerfileStr = None
-    with open(dockerfile_path, 'r') as fp:
-        dockerfileStr = str(fp.read())
-
-    dockerfileExpectedStr = ''
-    with open(dockerfile_expected_path, 'r') as fp:
-        dockerfileExpectedStr = str(fp.read())
-    
-    if origin_dockerfile_str:
-        with open(dockerfile_path, 'w') as fp:
-            fp.write(origin_dockerfile_str)
-    else:
-        os.remove(dockerfile_path)
-    
-    assert dockerfileExpectedStr == dockerfileStr

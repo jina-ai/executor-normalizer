@@ -368,19 +368,19 @@ def normalize(
     work_path: 'pathlib.Path',
     meta: Dict = {'jina': '2'},
     env: Dict = {},
-    build_env: Dict = {},
     dry_run: bool = False,
     dockerfile: Optional[str] = None,
-    build_env_file: Optional[str] = None,
-    **kwargs,
+    dockerfile_syntax: Optional[str] = None,
+    **_argv,
 ) -> ExecutorModel:
     """Normalize the executor package.
 
     :param work_path: the executor folder where it located
     :param meta: the version info of the Jina to work with
     :param env: the environment variables the Jina works with
-    :param build_env: the environment variables in use set in build steps
     :param dry_run: if True, dry_run the file dumps
+    :param dockerfile: custom dockerfile path
+    :param dockerfile_syntax: custom dockerfile syntax
 
     :return: normalized Executor model
 
@@ -436,7 +436,7 @@ def normalize(
 
         if class_name is None:
             raise Exception('Not found jtype in config.yml')
-        
+
         metas_py_modules = config.get('metas', {}).get('py_modules', None)
         root_py_modules = config.get('py_modules', None)
 
@@ -614,17 +614,14 @@ def normalize(
         + f'\tjina_base_image: {jina_image_tag}'
     )
 
-    dockerfile = None
+    dockerfile: ExecutorDockerfile = None
     if dockerfile_path.exists():
         dockerfile = ExecutorDockerfile(
             docker_file=dockerfile_path,
             build_args={'JINA_VERSION': f'{jina_version}'},
+            syntax=dockerfile_syntax
         )
-        if build_env and isinstance(build_env, dict) and len(build_env.keys()):
-            dockerfile.insert_build_env(build_env)
 
-        if build_env_file:
-            dockerfile.insert_build_env_file(build_env_file)
         # if dockerfile.is_multistage():
         #     # Don't support multi-stage Dockerfie Optimization
         #     return
@@ -639,7 +636,7 @@ def normalize(
             dockerfile.dump(dockerfile_path)
     else:
         logger.debug('=> generating Dockerfile ...')
-        dockerfile = ExecutorDockerfile(build_args={'JINA_VERSION': jina_image_tag})
+        dockerfile = ExecutorDockerfile(build_args={'JINA_VERSION': jina_image_tag}, syntax=dockerfile_syntax)
 
         # if len(base_images) > 0:
         #     logger.debug(f'=> use base image: {base_images}')
@@ -653,12 +650,6 @@ def normalize(
 
         if requirements_path.exists():
             dockerfile.add_pip_install()
-
-        if build_env and isinstance(build_env, dict) and len(build_env.keys()):
-            dockerfile.insert_build_env(build_env)
-
-        if build_env_file:
-            dockerfile.insert_build_env_file(build_env_file)
 
         # if len(test_glob) > 0:
         #     dockerfile.add_unitest()
@@ -675,7 +666,8 @@ def normalize(
     entrypoint_value = dockerfile.entrypoint
 
     new_dockerfile = ExecutorDockerfile(
-        docker_file=__resources_path__ / 'templates' / 'dockerfile.base'
+        docker_file=__resources_path__ / 'templates' / 'dockerfile.base',
+        syntax=dockerfile_syntax
     )
     new_dockerfile.set_entrypoint(entrypoint_value)
 

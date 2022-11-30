@@ -38,9 +38,8 @@ class PackagePayload(BaseModel):
     package_path: Path
     meta: Optional[Dict] = {'jina': 'master'}
     env: Optional[Dict] = {}
-    build_env: Optional[Dict] = {}
     dockerfile: Optional[str] = None
-    build_env_file: Optional[str] = None
+    dockerfile_syntax: Optional[str] = None
 
 
 class NormalizeResult(BaseModel):
