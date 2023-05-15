@@ -23,6 +23,7 @@ from .excepts import (
 )
 from .helper import (
     get_config_template,
+    get_dependencies_from_pyproject,
     get_imports,
     resolve_import,
     convert_from_to_path,
@@ -406,7 +407,9 @@ def normalize(
             f'The folder "{work_path}" does not exist, can not normalize'
         )
 
-    dockerfile_path = (work_path / dockerfile) if dockerfile else (work_path / 'Dockerfile')
+    dockerfile_path = (
+        (work_path / dockerfile) if dockerfile else (work_path / 'Dockerfile')
+    )
     manifest_cfg = None
     manifest_location = None
     manifest_path = work_path / 'manifest.yml'
@@ -414,14 +417,24 @@ def normalize(
     config_path = work_path / 'config.yml'
     readme_path = work_path / 'README.md'
     requirements_path = work_path / 'requirements.txt'
+    pyproject_path = work_path / 'pyproject.toml'
     gpu_dockerfile_path = work_path / 'Dockerfile.gpu'
     test_glob = list(work_path.glob('tests/test_*.py'))
+
+    if pyproject_path.exists():
+        with open(requirements_path, 'a') as f:
+            logger.debug(f'=> Dependencies extracted from `pyproject.toml`: ')
+            for dep in get_dependencies_from_pyproject(pyproject_path):
+                logger.debug(f'=========> {dep}')
+                f.write(f'{dep}\n')
 
     # load manifest configuration
     if manifest_path.exists():
         manifest_location = manifest_path
         raw_manifest_cfg = yaml.safe_load(open(manifest_path, 'r'))
-        parsed_manifest_cfg = {k: v for k, v in raw_manifest_cfg.items() if k in manifest_keys}
+        parsed_manifest_cfg = {
+            k: v for k, v in raw_manifest_cfg.items() if k in manifest_keys
+        }
         if len(parsed_manifest_cfg) > 0:
             manifest_cfg = parsed_manifest_cfg
 
@@ -441,7 +454,9 @@ def normalize(
         root_py_modules = config.get('py_modules', None)
 
         if metas_py_modules and root_py_modules:
-            raise Exception('The parameter py_modules can only be appear in one of metas and root in config.yml')
+            raise Exception(
+                'The parameter py_modules can only be appear in one of metas and root in config.yml'
+            )
 
         py_modules = metas_py_modules if metas_py_modules else root_py_modules
         if isinstance(py_modules, str):
@@ -506,7 +521,7 @@ def normalize(
 
     hubble_score_metrics = {
         'dockerfile_exists': dockerfile_path.exists(),
-        'manifest_exists':  manifest_path is not None,
+        'manifest_exists': manifest_path is not None,
         'config_exists': config_path.exists(),
         'readme_exists': readme_path.exists(),
         'requirements_exists': requirements_path.exists(),
@@ -619,11 +634,11 @@ def normalize(
         dockerfile = ExecutorDockerfile(
             docker_file=dockerfile_path,
             build_args={'JINA_VERSION': f'{jina_version}'},
-            syntax=dockerfile_syntax
+            syntax=dockerfile_syntax,
         )
 
         # if dockerfile.is_multistage():
-        #     # Don't support multi-stage Dockerfie Optimization
+        #     # Don't support multi-stage Dockerfile Optimization
         #     return
 
         # if dockerfile.baseimage.startswith('jinaai/jina') and len(base_images) > 0:
@@ -636,7 +651,9 @@ def normalize(
             dockerfile.dump(dockerfile_path)
     else:
         logger.debug('=> generating Dockerfile ...')
-        dockerfile = ExecutorDockerfile(build_args={'JINA_VERSION': jina_image_tag}, syntax=dockerfile_syntax)
+        dockerfile = ExecutorDockerfile(
+            build_args={'JINA_VERSION': jina_image_tag}, syntax=dockerfile_syntax
+        )
 
         # if len(base_images) > 0:
         #     logger.debug(f'=> use base image: {base_images}')
@@ -667,7 +684,7 @@ def normalize(
 
     new_dockerfile = ExecutorDockerfile(
         docker_file=__resources_path__ / 'templates' / 'dockerfile.base',
-        syntax=dockerfile_syntax
+        syntax=dockerfile_syntax,
     )
     new_dockerfile.set_entrypoint(entrypoint_value)
 

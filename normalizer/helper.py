@@ -1,5 +1,9 @@
 import pathlib
 from typing import Dict, List
+import toml
+import re
+from pprint import pformat
+from loguru import logger
 from jinja2 import Environment, FileSystemLoader
 from jina.jaml import JAML
 from importlab.import_finder import get_imports
@@ -8,6 +12,13 @@ from . import __resources_path__
 
 
 def convert_from_to_path(from_state, base_dir: 'pathlib.Path' = pathlib.Path('.')):
+    """
+    Convert a state name to a path.
+
+    :param from_state: the state name
+    :param base_dir: the base directory to search
+    :return: the path to the state
+    """
     for i, c in enumerate(from_state):
         if c != '.':
             break
@@ -23,6 +34,7 @@ def convert_from_to_path(from_state, base_dir: 'pathlib.Path' = pathlib.Path('.'
         return base_dir.joinpath(path_name + '/__init__.py')
     return None
 
+
 def load_manifest(yaml_path: 'pathlib.Path') -> Dict:
     """Load manifest of executor from YAML file."""
     with open(__resources_path__ / 'manifest.yml') as fp:
@@ -35,6 +47,64 @@ def load_manifest(yaml_path: 'pathlib.Path') -> Dict:
             tmp.update(JAML.load(fp))
 
     return tmp
+
+
+def convert_version(version: str) -> str:
+    """Convert version specifier to requirements.txt format."""
+    version = re.sub(r'~=|==|!=|>=|<=', '', version)
+    if version.startswith('^'):
+        version = '==' + version[1:]
+    elif version.startswith('~'):
+        version = (
+            '>='
+            + version[1:]
+            + ','
+            + '<'
+            + re.sub(r'[^\d\.]', '', version[1:])
+            + '.999'
+        )
+    elif version.startswith('*') or version == '':
+        version = ''
+    else:
+        version = '==' + version
+    return version
+
+
+def get_dependencies_from_pyproject(pyproject_path: 'pathlib.Path') -> List[str]:
+    """Extract dependencies from pyproject.toml file."""
+    try:
+        with open(pyproject_path, 'r') as f:
+            pyproject = toml.load(f)
+
+        # Try to extract dependencies from different sections of pyproject.toml
+        dependencies = pyproject.get('project', {}).get('dependencies')
+        if dependencies is None:
+            dependencies = (
+                pyproject.get('tool', {}).get('poetry', {}).get('dependencies')
+            )
+        else:
+            return dependencies
+
+        if dependencies is None:
+            raise KeyError
+
+        # Convert dependencies to requirements.txt format
+        requirements = []
+        for package, version in dependencies.items():
+            # Ignore "python" package since it's already specified in the runtime environment
+            if package != 'python':
+                version = convert_version(version)
+                requirements.append(f'{package}{version}')
+
+        return requirements
+
+    except KeyError:
+        logger.error(f'Could not find dependencies in {pyproject_path}')
+        logger.error(f'pyproject.toml content:\n {pformat(pyproject)}')
+        return []
+    except Exception as e:
+        logger.error(f'Error while processing {pyproject_path}: {e}')
+        return []
 
 
 def get_config_template():
