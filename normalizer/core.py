@@ -688,6 +688,13 @@ def normalize(
     )
     new_dockerfile.set_entrypoint(entrypoint_value)
 
+    if 'docarray' in meta:
+        dockerfile.add_docarray_install(meta["docarray"])
+        if not dry_run:
+            dockerfile.dump(dockerfile_path)
+
+    dockerfile.print()
+
     new_dockerfile_path = work_path / '__jina__.Dockerfile'
     if not dry_run:
         new_dockerfile.dump(new_dockerfile_path)

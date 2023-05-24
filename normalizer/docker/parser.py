@@ -91,6 +91,24 @@ class ExecutorDockerfile:
             """
         )
 
+    def add_docarray_install(self, docArrayVersion):
+        instruction_template = dedent(
+            """\
+            RUN pip install --default-timeout=1000 --compile --no-cache-dir docarray=={0} # generated
+
+            """
+        )
+        content = instruction_template.format(docArrayVersion)
+        for instruction in self._parser.structure:
+            if instruction['instruction'] == 'ENTRYPOINT':
+                self._parser.add_lines_at(instruction['startline']-1, content, after=True)
+                break
+
+    def print(self):
+        print('DOCKERFILE--------------')
+        for instruction in self._parser.structure:
+            print(instruction["content"])
+
     @property
     def is_multistage(self):
         return self._parser.is_multistage()
