@@ -1,0 +1,7 @@
+FROM jinaai/jina:3.16.0
+
+COPY . /workspace
+WORKDIR /workspace
+
+RUN pip install --default-timeout=1000 --compile --no-cache-dir docarray==0.30.0 # generated
+ENTRYPOINT ["jina", "executor", "--uses", "config.yml"]

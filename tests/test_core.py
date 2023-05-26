@@ -98,29 +98,49 @@ def test_get_executor_args(package_path, expected_path):
 
 
 @pytest.mark.parametrize(
-    'package_path, dockerfile_syntax',
+    'package_path, dockerfile_syntax, meta_dict, dockerfile_name',
     [
         (
             Path(__file__).parent / 'cases' / 'executor_1',
-            None
+            None,
+            {'jina': '2'},
+            'Dockerfile'
         ),
          (
             Path(__file__).parent / 'cases' / 'executor_2',
-            None
+            None,
+            {'jina': '2'},
+            'Dockerfile'
         ),
         (
             Path(__file__).parent / 'cases' / 'executor_6',
-            'jinahub/dockerfile:1.4.3-magic-shell'
+            'jinahub/dockerfile:1.4.3-magic-shell',
+            {'jina': '2'},
+            'Dockerfile'
         ),
         (
             Path(__file__).parent / 'cases' / 'executor_7',
-            'jinahub/dockerfile:1.4.3-magic-shell'
+            'jinahub/dockerfile:1.4.3-magic-shell',
+            {'jina': '2'},
+            'Dockerfile'
+        ),
+        (
+            Path(__file__).parent / 'cases' / 'executor_8',
+            None,
+            {'jina': '3.16.0', 'docarray': '0.30.0'},
+            'Dockerfile'
+        ),
+        (
+            Path(__file__).parent / 'cases' / 'executor_9',
+            None,
+            {'jina': '3.16.0', 'docarray': '0.30.0'},
+            '__jina__.Dockerfile'
         ),
     ],
 )
-def test_compare_dockerfile_syntax(package_path, dockerfile_syntax):
+def test_compare_dockerfile_syntax(package_path, dockerfile_syntax, meta_dict, dockerfile_name):
 
-    dockerfile_path = Path(package_path / 'Dockerfile')
+    dockerfile_path = Path(package_path / dockerfile_name)
     dockerfile_expected_path = Path(package_path / 'Dockerfile.expect')
 
     originDockerfileStr = None;
@@ -128,7 +148,7 @@ def test_compare_dockerfile_syntax(package_path, dockerfile_syntax):
         with open(dockerfile_path, 'r') as fp:
             originDockerfileStr = str(fp.read())
 
-    core.normalize(package_path, dockerfile_syntax=dockerfile_syntax, dry_run=False)
+    core.normalize(package_path, dockerfile_syntax=dockerfile_syntax, dry_run=False, meta=meta_dict, dockerfile=dockerfile_name)
     assert dockerfile_path.exists() == True;
 
     dockerfileStr = None

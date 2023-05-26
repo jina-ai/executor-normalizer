@@ -688,7 +688,7 @@ def normalize(
     )
     new_dockerfile.set_entrypoint(entrypoint_value)
 
-    if 'docarray' in meta:
+    if 'docarray' in meta and '__jina__.Dockerfile' not in str(dockerfile_path):
         dockerfile.add_docarray_install(meta["docarray"])
         if not dry_run:
             dockerfile.dump(dockerfile_path)
