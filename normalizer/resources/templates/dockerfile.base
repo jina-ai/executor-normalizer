@@ -31,6 +31,6 @@ ENV JINA_PIP_INSTALL_PERF=1
 # Need to uninstall jina first when upgrading 2.x to 3.x
 # https://github.com/jina-ai/jina/issues/4194
 RUN pip uninstall -y jina && pip install --upgrade ${ARG_PIP_JINA_VERSION}
-RUN if [ "$ARG_DOCARRAY_VERSION" != "undefined" ] ; then \
+RUN if [ -n "$ARG_DOCARRAY_VERSION" ] && [ "$ARG_DOCARRAY_VERSION" != "undefined" ] ; then \
     pip uninstall -y docarray && pip install --upgrade docarray==${ARG_DOCARRAY_VERSION} ; \
     fi
