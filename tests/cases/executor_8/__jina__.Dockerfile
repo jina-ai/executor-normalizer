@@ -34,3 +34,4 @@ RUN pip uninstall -y jina && pip install --upgrade ${ARG_PIP_JINA_VERSION}
 RUN if [ "$ARG_DOCARRAY_VERSION" != "undefined" ] ; then \
     pip uninstall -y docarray && pip install --upgrade docarray==${ARG_DOCARRAY_VERSION} ; \
     fi
+ENTRYPOINT ["jina", "executor", "--uses", "config.yml"]
