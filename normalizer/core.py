@@ -382,6 +382,7 @@ def normalize(
     :param dry_run: if True, dry_run the file dumps
     :param dockerfile: custom dockerfile path
     :param dockerfile_syntax: custom dockerfile syntax
+    :param _argv: other arguments
 
     :return: normalized Executor model
 
@@ -618,7 +619,7 @@ def normalize(
 
     base_images, dep_tools = prelude(imports)
     jina_version = choose_jina_version(meta['jina'])
-    py_version = meta.get('python', '3.7.0')
+    py_version = meta.get('python', '3.8.0')
 
     jina_image_tag = get_jina_image_tag(jina_version, py_version)
 
@@ -689,7 +690,7 @@ def normalize(
     new_dockerfile.set_entrypoint(entrypoint_value)
 
     if 'docarray' in meta and '__jina__.Dockerfile' not in str(dockerfile_path):
-        dockerfile.add_docarray_install(meta["docarray"])
+        dockerfile.add_docarray_install(meta['docarray'])
         if not dry_run:
             dockerfile.dump(dockerfile_path)
 
