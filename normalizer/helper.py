@@ -193,11 +193,11 @@ def get_jina_latest_version() -> str:
         import json
 
         req = Request(
-            'https://api.jina.ai/latest', headers={'User-Agent': 'Mozilla/5.0'}
+            'https://pypi.org/pypi/jina/json', headers={'User-Agent': 'Mozilla/5.0'}
         )
 
         with urlopen(req, timeout=1) as resource:
-            latest_ver = json.load(resource)['version']
+            latest_ver = json.load(resource)['info']['version']
 
             return latest_ver
     except:
